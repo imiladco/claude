@@ -203,6 +203,21 @@
     </div>
   </div>
 
+  <div class="field">
+    <label>Provider</label>
+    <select id="provider">
+      <option value="microlink">microlink.io — Free, no key</option>
+      <option value="thum">thum.io — Free, no key</option>
+      <option value="screenshotone">ScreenshotOne — API key required</option>
+      <option value="apiflash">ApiFlash — API key required</option>
+    </select>
+  </div>
+
+  <div class="field" id="keyField" style="display:none">
+    <label>API Key</label>
+    <input type="text" id="apiKey" placeholder="Paste your API key here" spellcheck="false" style="padding:8px 10px;direction:ltr" />
+  </div>
+
   <button id="capture">Capture full page</button>
 
   <div class="status" id="status">
@@ -213,7 +228,7 @@
   </div>
 
   <div class="footer">
-    <span class="version">v1.0.6</span>
+    <span class="version">v1.0.7</span>
     <div class="update-area">
       <span class="update-msg" id="updateMsg"></span>
       <button id="checkUpdate">Check for updates</button>
@@ -221,7 +236,7 @@
   </div>
 
   <script>
-    const CURRENT_VERSION = "1.0.6";
+    const CURRENT_VERSION = "1.0.7";
     const CACHE_KEY = "ws_plugin_cache";
     const API_URL = "https://api.github.com/repos/imiladco/claude/contents/figma-screenshot-plugin/app.html";
 
@@ -248,17 +263,26 @@
       } catch (_) {}
     })();
 
-    const btn        = document.getElementById("capture");
-    const urlInput   = document.getElementById("url");
-    const widthSel   = document.getElementById("width");
-    const qualitySel = document.getElementById("quality");
-    const statusEl   = document.getElementById("status");
-    const statusText = document.getElementById("statusText");
-    const updateBtn  = document.getElementById("checkUpdate");
-    const updateMsg  = document.getElementById("updateMsg");
+    const btn          = document.getElementById("capture");
+    const urlInput     = document.getElementById("url");
+    const widthSel     = document.getElementById("width");
+    const qualitySel   = document.getElementById("quality");
+    const providerSel  = document.getElementById("provider");
+    const keyField     = document.getElementById("keyField");
+    const apiKeyInput  = document.getElementById("apiKey");
+    const statusEl     = document.getElementById("status");
+    const statusText   = document.getElementById("statusText");
+    const updateBtn    = document.getElementById("checkUpdate");
+    const updateMsg    = document.getElementById("updateMsg");
+
+    const KEY_PROVIDERS = ["screenshotone", "apiflash"];
+    providerSel.addEventListener("change", () => {
+      keyField.style.display = KEY_PROVIDERS.includes(providerSel.value) ? "flex" : "none";
+    });
 
     const MAX_DIM   = 4096;
     const MAX_BYTES = 3.5 * 1024 * 1024;
+    const enc = encodeURIComponent;
 
     function setStatus(type, msg) {
       statusEl.className = "status " + type;
@@ -286,13 +310,65 @@
       }
 
       const over = await cv.convertToBlob({ type: "image/jpeg", quality: 0.5 });
-      const scale = Math.sqrt(MAX_BYTES / over.size);
-      const sw = Math.round(w * scale), sh = Math.round(h * scale);
+      const s = Math.sqrt(MAX_BYTES / over.size);
+      const sw = Math.round(w * s), sh = Math.round(h * s);
       const cv2 = new OffscreenCanvas(sw, sh);
       cv2.getContext("2d").drawImage(bmp, 0, 0, sw, sh);
       const fin = await cv2.convertToBlob({ type: "image/jpeg", quality: 0.7 });
       return { data: new Uint8Array(await fin.arrayBuffer()), width: sw, height: sh };
     }
+
+    async function fetchImageBlob(imgUrl) {
+      const r = await fetch(imgUrl);
+      if (!r.ok) throw new Error(`Image download failed: ${r.status}`);
+      return r.blob();
+    }
+
+    const PROVIDERS = {
+      microlink: async (url, w, scale) => {
+        const apiUrl =
+          `https://api.microlink.io/?url=${enc(url)}` +
+          `&screenshot=true&meta=false&fullPage=true&type=png` +
+          `&viewport.width=${w}&viewport.deviceScaleFactor=${scale}` +
+          `&disableAnimations=true&waitForTimeout=4000`;
+        const r = await fetch(apiUrl);
+        if (!r.ok) throw new Error(`microlink error ${r.status}`);
+        const j = await r.json();
+        if (j.status !== "success" || !j.data?.screenshot?.url)
+          throw new Error("microlink: screenshot unavailable");
+        const blob = await fetchImageBlob(j.data.screenshot.url);
+        return { blob, width: j.data.screenshot.width || w, height: j.data.screenshot.height || 900 };
+      },
+
+      thum: async (url, w) => {
+        const imgUrl = `https://image.thum.io/get/width/${w}/fullpage/${enc(url)}`;
+        const blob = await fetchImageBlob(imgUrl);
+        const bmp = await createImageBitmap(blob);
+        return { blob, width: bmp.width, height: bmp.height };
+      },
+
+      screenshotone: async (url, w, scale, key) => {
+        if (!key) throw new Error("API key required for ScreenshotOne");
+        const imgUrl =
+          `https://api.screenshotone.com/take?access_key=${key}` +
+          `&url=${enc(url)}&viewport_width=${w}&device_scale_factor=${scale}` +
+          `&full_page=true&format=jpg&image_quality=90&delay=3`;
+        const blob = await fetchImageBlob(imgUrl);
+        const bmp = await createImageBitmap(blob);
+        return { blob, width: bmp.width, height: bmp.height };
+      },
+
+      apiflash: async (url, w, scale, key) => {
+        if (!key) throw new Error("API key required for ApiFlash");
+        const imgUrl =
+          `https://api.apiflash.com/v1/urltoimage?access_key=${key}` +
+          `&url=${enc(url)}&width=${w}&full_page=true&format=jpeg&quality=90` +
+          `&scale_factor=${scale}&wait=3000&scroll_page=true`;
+        const blob = await fetchImageBlob(imgUrl);
+        const bmp = await createImageBitmap(blob);
+        return { blob, width: bmp.width, height: bmp.height };
+      }
+    };
 
     btn.addEventListener("click", async () => {
       const url = urlInput.value.trim();
@@ -301,40 +377,23 @@
         return;
       }
 
+      const provider = providerSel.value;
+      const apiKey   = apiKeyInput.value.trim();
+      const w        = parseInt(widthSel.value);
+      const scale    = parseInt(qualitySel.value);
+
       btn.disabled = true;
-      setStatus("loading", "Requesting screenshot…");
+      setStatus("loading", `Requesting screenshot via ${providerSel.options[providerSel.selectedIndex].text.split(" —")[0]}…`);
 
       try {
-        const apiUrl =
-          `https://api.microlink.io/?url=${encodeURIComponent(url)}` +
-          `&screenshot=true&meta=false&fullPage=true&type=png` +
-          `&viewport.width=${widthSel.value}` +
-          `&viewport.deviceScaleFactor=${qualitySel.value}` +
-          `&disableAnimations=true` +
-          `&waitForTimeout=5000` +
-          `&evaluate=${encodeURIComponent("() => new Promise(r => { let y = 0; const t = setInterval(() => { window.scrollBy(0, 400); y += 400; if (y >= document.body.scrollHeight) { clearInterval(t); window.scrollTo(0, 0); setTimeout(r, 1500); } }, 80); })")}`;
-
-        const apiRes = await fetch(apiUrl);
-        if (!apiRes.ok) throw new Error(`Server error ${apiRes.status}`);
-
-        const json = await apiRes.json();
-        if (json.status !== "success" || !json.data?.screenshot?.url)
-          throw new Error("Screenshot failed. Check the URL and try again.");
-
-        setStatus("loading", "Downloading image…");
-        const imgRes = await fetch(json.data.screenshot.url);
-        if (!imgRes.ok) throw new Error("Failed to download image.");
+        const { blob, width, height } = await PROVIDERS[provider](url, w, scale, apiKey);
 
         setStatus("loading", "Processing…");
-        const { data, width, height } = await compressImage(
-          await imgRes.blob(),
-          json.data.screenshot.width || parseInt(widthSel.value),
-          json.data.screenshot.height || 900
-        );
+        const { data, width: fw, height: fh } = await compressImage(blob, width, height);
 
         setStatus("loading", "Adding to canvas…");
         parent.postMessage({
-          pluginMessage: { type: "add-image", imageData: Array.from(data), naturalWidth: width, naturalHeight: height, url }
+          pluginMessage: { type: "add-image", imageData: Array.from(data), naturalWidth: fw, naturalHeight: fh, url }
         }, "*");
 
       } catch (err) {
