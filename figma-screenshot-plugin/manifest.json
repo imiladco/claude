@@ -6,7 +6,7 @@
   "ui": "ui.html",
   "networkAccess": {
     "allowedDomains": ["*"],
-    "reasoning": "This plugin fetches full-page screenshots from microlink.io API and loads updates from raw.githubusercontent.com. The target screenshot domain varies based on user input, so wildcard access is required."
+    "reasoning": "Fetches full-page screenshots from user-selected providers (microlink.io, thum.io, ScreenshotOne, ApiFlash) whose image CDNs vary, and checks for plugin updates via the GitHub API. The captured website domain is arbitrary user input, so wildcard access is required."
   },
   "editorType": ["figma"]
 }
