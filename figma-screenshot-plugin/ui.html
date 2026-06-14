@@ -221,9 +221,9 @@
   </div>
 
   <script>
-    const CURRENT_VERSION = "1.0.3";
+    const CURRENT_VERSION = "1.0.5";
     const CACHE_KEY = "ws_plugin_cache";
-    const APP_URL = "https://raw.githubusercontent.com/imiladco/claude/main/figma-screenshot-plugin/app.html";
+    const API_URL = "https://api.github.com/repos/imiladco/claude/contents/figma-screenshot-plugin/app.html";
 
     (function applyCacheIfNewer() {
       try {
@@ -339,10 +339,13 @@
       updateMsg.textContent = "Checking…";
 
       try {
-        const res = await fetch(APP_URL + "?t=" + Date.now());
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const res = await fetch(API_URL + "?t=" + Date.now(), {
+          headers: { Accept: "application/vnd.github.v3+json" }
+        });
+        if (!res.ok) throw new Error(`GitHub API: ${res.status}`);
 
-        const html = await res.text();
+        const json = await res.json();
+        const html = atob(json.content.replace(/\n/g, ""));
         const match = html.match(/CURRENT_VERSION\s*=\s*["']([^"']+)["']/);
         if (!match) throw new Error("Version not found");
 
