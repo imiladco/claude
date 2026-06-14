@@ -300,8 +300,9 @@
           `&screenshot=true&meta=false&fullPage=true&type=png` +
           `&viewport.width=${widthSel.value}` +
           `&viewport.deviceScaleFactor=${qualitySel.value}` +
-          `&waitForTimeout=2500` +
-          `&disableAnimations=true`;
+          `&disableAnimations=true` +
+          `&waitForTimeout=5000` +
+          `&evaluate=${encodeURIComponent("() => new Promise(r => { let y = 0; const t = setInterval(() => { window.scrollBy(0, 400); y += 400; if (y >= document.body.scrollHeight) { clearInterval(t); window.scrollTo(0, 0); setTimeout(r, 1500); } }, 80); })")}`;
 
         const apiRes = await fetch(apiUrl);
         if (!apiRes.ok) throw new Error(`Server error ${apiRes.status}`);

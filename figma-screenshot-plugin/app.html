@@ -213,7 +213,7 @@
   </div>
 
   <div class="footer">
-    <span class="version">v1.0.3</span>
+    <span class="version">v1.0.4</span>
     <div class="update-area">
       <span class="update-msg" id="updateMsg"></span>
       <button id="checkUpdate">Check for updates</button>
@@ -221,7 +221,7 @@
   </div>
 
   <script>
-    const CURRENT_VERSION = "1.0.3";
+    const CURRENT_VERSION = "1.0.4";
     const CACHE_KEY = "ws_plugin_cache";
     const APP_URL = "https://raw.githubusercontent.com/imiladco/claude/main/figma-screenshot-plugin/app.html";
 
@@ -300,8 +300,9 @@
           `&screenshot=true&meta=false&fullPage=true&type=png` +
           `&viewport.width=${widthSel.value}` +
           `&viewport.deviceScaleFactor=${qualitySel.value}` +
-          `&waitForTimeout=2500` +
-          `&disableAnimations=true`;
+          `&disableAnimations=true` +
+          `&waitForTimeout=5000` +
+          `&evaluate=${encodeURIComponent("() => new Promise(r => { let y = 0; const t = setInterval(() => { window.scrollBy(0, 400); y += 400; if (y >= document.body.scrollHeight) { clearInterval(t); window.scrollTo(0, 0); setTimeout(r, 1500); } }, 80); })")}`;
 
         const apiRes = await fetch(apiUrl);
         if (!apiRes.ok) throw new Error(`Server error ${apiRes.status}`);
