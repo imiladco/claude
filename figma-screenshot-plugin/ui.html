@@ -236,7 +236,7 @@
   </div>
 
   <script>
-    const CURRENT_VERSION = "1.0.7";
+    const CURRENT_VERSION = "1.0.8";
     const CACHE_KEY = "ws_plugin_cache";
     const API_URL = "https://api.github.com/repos/imiladco/claude/contents/figma-screenshot-plugin/app.html";
 
@@ -276,9 +276,26 @@
     const updateMsg    = document.getElementById("updateMsg");
 
     const KEY_PROVIDERS = ["screenshotone", "apiflash"];
+
+    function loadSavedKey(provider) {
+      return localStorage.getItem("ws_key_" + provider) || "";
+    }
+
+    function saveKey(provider, key) {
+      if (key) localStorage.setItem("ws_key_" + provider, key);
+    }
+
     providerSel.addEventListener("change", () => {
-      keyField.style.display = KEY_PROVIDERS.includes(providerSel.value) ? "flex" : "none";
+      const needsKey = KEY_PROVIDERS.includes(providerSel.value);
+      keyField.style.display = needsKey ? "flex" : "none";
+      if (needsKey) apiKeyInput.value = loadSavedKey(providerSel.value);
     });
+
+    const savedProvider = localStorage.getItem("ws_provider");
+    if (savedProvider) {
+      providerSel.value = savedProvider;
+      providerSel.dispatchEvent(new Event("change"));
+    }
 
     const MAX_DIM   = 4096;
     const MAX_BYTES = 3.5 * 1024 * 1024;
@@ -381,6 +398,9 @@
       const apiKey   = apiKeyInput.value.trim();
       const w        = parseInt(widthSel.value);
       const scale    = parseInt(qualitySel.value);
+
+      localStorage.setItem("ws_provider", provider);
+      saveKey(provider, apiKey);
 
       btn.disabled = true;
       setStatus("loading", `Requesting via ${providerSel.options[providerSel.selectedIndex].text.split(" —")[0]}…`);
