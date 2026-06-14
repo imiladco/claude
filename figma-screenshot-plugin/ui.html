@@ -7,21 +7,21 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg: #1a1a1a;
-      --surface: #242424;
-      --surface-2: #2c2c2c;
-      --border: #333;
+      --bg: #161618;
+      --surface: #1f1f23;
+      --surface-2: #27272c;
+      --border: #2e2e34;
       --border-focus: #6366f1;
-      --text: #f5f5f5;
-      --text-2: #a0a0a0;
-      --text-3: #6b6b6b;
+      --text: #f4f4f5;
+      --text-2: #a1a1aa;
+      --text-3: #6b6b73;
       --accent: #6366f1;
-      --accent-hover: #7376f3;
+      --accent-hover: #7c7ef5;
       --success: #22c55e;
-      --error: #ef4444;
+      --error: #f43f5e;
       --warning: #f59e0b;
-      --radius: 8px;
-      --radius-sm: 6px;
+      --radius: 10px;
+      --radius-sm: 7px;
     }
 
     html, body { height: 100%; }
@@ -35,39 +35,36 @@
       display: flex;
       flex-direction: column;
       overflow: hidden;
+      -webkit-font-smoothing: antialiased;
     }
 
     /* ── Header ─────────────────────────────────── */
     .header {
       display: flex;
       align-items: center;
-      gap: 9px;
-      padding: 14px 16px 0;
+      gap: 10px;
+      padding: 15px 16px 0;
       flex-shrink: 0;
     }
-
     .logo {
-      width: 26px; height: 26px; flex-shrink: 0;
+      width: 28px; height: 28px; flex-shrink: 0;
       background: linear-gradient(135deg, var(--accent), #8b5cf6);
-      border-radius: var(--radius-sm);
+      border-radius: 8px;
       display: flex; align-items: center; justify-content: center;
       color: #fff;
     }
-    .logo svg { width: 15px; height: 15px; }
-
-    .header h1 {
-      font-size: 13px; font-weight: 600; letter-spacing: -0.01em; flex: 1;
-    }
+    .logo svg { width: 16px; height: 16px; }
+    .header h1 { font-size: 13.5px; font-weight: 600; letter-spacing: -0.01em; flex: 1; }
 
     /* ── Tabs ───────────────────────────────────── */
     .tabs {
-      display: flex;
-      padding: 12px 16px 0;
+      display: flex; gap: 2px;
+      padding: 14px 16px 0;
       border-bottom: 1px solid var(--border);
       flex-shrink: 0;
     }
     .tab {
-      padding: 7px 13px;
+      padding: 8px 14px;
       font-size: 12px; font-weight: 500;
       color: var(--text-3);
       cursor: pointer;
@@ -79,30 +76,32 @@
     .tab:hover { color: var(--text-2); }
     .tab.active { color: var(--text); border-bottom-color: var(--accent); }
 
-    /* ── Panels (scrollable) ────────────────────── */
+    /* ── Panels ─────────────────────────────────── */
     .panel {
       display: none;
       flex-direction: column;
-      gap: 13px;
-      padding: 15px 16px;
+      gap: 14px;
+      padding: 16px;
       flex: 1 1 auto;
       overflow-y: auto;
       min-height: 0;
     }
     .panel.active { display: flex; }
-    .panel::-webkit-scrollbar { width: 8px; }
-    .panel::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+    .panel::-webkit-scrollbar { width: 9px; }
+    .panel::-webkit-scrollbar-thumb { background: var(--border); border-radius: 5px; border: 2px solid var(--bg); }
 
     /* ── Fields ─────────────────────────────────── */
     .field { display: flex; flex-direction: column; gap: 6px; }
-
     .field label {
       font-size: 10px; font-weight: 600;
       color: var(--text-3);
       letter-spacing: .04em; text-transform: uppercase;
       display: flex; align-items: center; justify-content: space-between;
     }
-    .field label a { color: var(--accent); text-decoration: none; font-size: 10px; text-transform: none; letter-spacing: 0; }
+    .field label a {
+      color: var(--accent); text-decoration: none;
+      font-size: 10px; text-transform: none; letter-spacing: 0; font-weight: 500;
+    }
     .field label a:hover { text-decoration: underline; }
 
     input, select {
@@ -118,7 +117,6 @@
     input { padding: 9px 11px; }
     input::placeholder { color: var(--text-3); }
     input:focus, select:focus { border-color: var(--border-focus); background: var(--surface-2); }
-    input:disabled { opacity: .5; cursor: default; }
 
     select {
       padding: 9px 30px 9px 11px;
@@ -129,7 +127,7 @@
       background-position: right 11px center;
     }
 
-    .row { display: flex; gap: 9px; }
+    .row { display: flex; gap: 10px; }
     .row .field { flex: 1; }
 
     /* ── Buttons ────────────────────────────────── */
@@ -144,7 +142,7 @@
     }
     button.primary:hover:not(:disabled) { background: var(--accent-hover); }
     button.primary:active:not(:disabled) { transform: scale(.99); }
-    button.primary:disabled { opacity: .4; cursor: not-allowed; }
+    button.primary:disabled { opacity: .45; cursor: not-allowed; }
 
     button.secondary {
       padding: 8px 13px;
@@ -156,9 +154,10 @@
       cursor: pointer; white-space: nowrap;
       transition: border-color .15s, color .15s, background .15s;
     }
-    button.secondary:hover { border-color: var(--accent); color: var(--text); }
+    button.secondary:hover:not(:disabled) { border-color: var(--accent); color: var(--text); }
+    button.secondary:disabled { opacity: .5; cursor: not-allowed; }
     button.danger { color: var(--error); }
-    button.danger:hover { border-color: var(--error); color: var(--error); background: rgba(239,68,68,.08); }
+    button.danger:hover:not(:disabled) { border-color: var(--error); color: var(--error); background: rgba(244,63,94,.08); }
 
     /* ── Status ─────────────────────────────────── */
     .status { display: none; font-size: 12px; }
@@ -168,22 +167,19 @@
     }
     .status.loading .status-inner { color: #a5b4fc; background: rgba(99,102,241,.1); border: 1px solid rgba(99,102,241,.25); }
     .status.success .status-inner { color: var(--success); background: rgba(34,197,94,.08); border: 1px solid rgba(34,197,94,.25); }
-    .status.error   .status-inner { color: var(--error);   background: rgba(239,68,68,.08); border: 1px solid rgba(239,68,68,.25); }
+    .status.error   .status-inner { color: var(--error);   background: rgba(244,63,94,.08); border: 1px solid rgba(244,63,94,.25); }
     .status.loading, .status.success, .status.error { display: block; }
-
     .spinner {
       width: 13px; height: 13px; flex-shrink: 0;
       border: 2px solid currentColor; border-right-color: transparent;
-      border-radius: 50%;
-      animation: spin .7s linear infinite;
+      border-radius: 50%; animation: spin .7s linear infinite;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
-    .status.success .icon, .status.error .icon { font-size: 13px; }
+    .status .icon { font-size: 13px; line-height: 1; }
+    .status-text { word-break: break-word; }
 
     /* ── Hint / warning ─────────────────────────── */
-    .hint {
-      font-size: 11px; color: var(--text-3); line-height: 1.5;
-    }
+    .hint { font-size: 11px; color: var(--text-3); line-height: 1.5; }
     .warn {
       display: none;
       font-size: 11.5px; color: var(--warning);
@@ -196,10 +192,10 @@
     .warn.show { display: block; }
     .warn b { font-weight: 600; }
 
-    /* ── Settings ───────────────────────────────── */
+    /* ── Settings groups ────────────────────────── */
     .group {
       display: flex; flex-direction: column; gap: 12px;
-      padding: 13px;
+      padding: 14px;
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: var(--radius);
@@ -211,32 +207,28 @@
     }
     .key-row { display: flex; gap: 7px; }
     .key-row input { flex: 1; }
-    .key-status {
-      font-size: 10px; color: var(--success);
-      display: flex; align-items: center; gap: 4px;
-      min-height: 14px;
-    }
+    .key-status { font-size: 10px; color: var(--success); min-height: 13px; }
     .pill {
       display: inline-block;
-      font-size: 10px; padding: 1px 7px; border-radius: 20px;
-      background: var(--surface-2); color: var(--text-3);
+      font-size: 10px; padding: 1px 8px; border-radius: 20px;
+      background: var(--surface-2); color: var(--text-3); font-weight: 500;
     }
     .pill.free { background: rgba(34,197,94,.12); color: var(--success); }
 
     /* ── Footer ─────────────────────────────────── */
     .footer {
       display: flex; align-items: center; justify-content: space-between;
-      padding: 9px 16px;
+      padding: 10px 16px;
       border-top: 1px solid var(--border);
       flex-shrink: 0;
     }
-    .version { font-size: 11px; color: var(--text-3); }
+    .version { font-size: 11px; color: var(--text-3); font-variant-numeric: tabular-nums; }
     .update-area { display: flex; align-items: center; gap: 9px; }
     .update-msg { font-size: 11px; }
     .update-msg.ok  { color: var(--success); }
     .update-msg.new { color: var(--warning); }
     .update-msg.err { color: var(--error); }
-    #checkUpdate { padding: 5px 10px; font-size: 11px; }
+    #checkUpdate { padding: 5px 11px; font-size: 11px; }
   </style>
 </head>
 <body>
@@ -287,7 +279,7 @@
     </div>
 
     <div class="field">
-      <label>Screenshot provider</label>
+      <label>Provider</label>
       <select id="provider">
         <option value="microlink">microlink.io — Free</option>
         <option value="thum">thum.io — Free</option>
@@ -306,47 +298,56 @@
       <div class="status-inner">
         <span class="spinner" id="statusSpinner"></span>
         <span class="icon" id="statusIcon" style="display:none"></span>
-        <span id="statusText"></span>
+        <span class="status-text" id="statusText"></span>
       </div>
     </div>
 
-    <p class="hint">Captures the entire page top to bottom. Tall pages are tiled automatically to preserve full quality.</p>
+    <p class="hint">Captures the whole page top to bottom. Ads, cookie banners and chat widgets are blocked automatically. Very tall pages are tiled to stay within Figma's image limits and grouped into one frame.</p>
   </div>
 
   <!-- Settings panel -->
   <div class="panel" id="panel-settings">
     <div class="group">
-      <span class="group-title">Free providers</span>
+      <span class="group-title">Free providers · no key</span>
       <div class="field">
-        <label>microlink.io <span class="pill free">No key</span></label>
-        <div class="hint">50 captures/day. Good general default.</div>
+        <label>microlink.io <span class="pill free">Free</span></label>
+        <div class="hint">~50 captures/day. Good general default.</div>
       </div>
       <div class="field">
-        <label>thum.io <span class="pill free">No key</span></label>
-        <div class="hint">Unlimited basic use. Reliable for full-page.</div>
+        <label>thum.io <span class="pill free">Free</span></label>
+        <div class="hint">Reliable full-page capture for unlimited basic use.</div>
       </div>
     </div>
 
     <div class="group">
-      <span class="group-title">API key providers</span>
-
+      <span class="group-title">ScreenshotCore</span>
       <div class="field">
-        <label>ScreenshotCore <a href="https://screenshotcore.com/api-keys" target="_blank">get key ↗</a></label>
+        <label>Access key <a href="https://screenshotcore.com/api-keys" target="_blank">get key ↗</a></label>
         <div class="key-row">
-          <input type="password" id="key-screenshotcore" placeholder="Access key" spellcheck="false" autocomplete="off" />
+          <input type="password" id="key-screenshotcore" placeholder="sk_..." spellcheck="false" autocomplete="off" />
+        </div>
+      </div>
+      <div class="field">
+        <label>Signing secret <span class="pill">optional</span></label>
+        <div class="key-row">
+          <input type="password" id="secret-screenshotcore" placeholder="Used to sign requests" spellcheck="false" autocomplete="off" />
           <button class="secondary" data-save="screenshotcore">Save</button>
         </div>
         <div class="key-status" id="status-screenshotcore"></div>
+        <div class="hint">When a secret is set, each request is signed with HMAC-SHA256.</div>
       </div>
+    </div>
 
+    <div class="group">
+      <span class="group-title">ApiFlash</span>
       <div class="field">
-        <label>ApiFlash <a href="https://apiflash.com" target="_blank">get key ↗</a></label>
+        <label>Access key <a href="https://apiflash.com" target="_blank">get key ↗</a></label>
         <div class="key-row">
           <input type="password" id="key-apiflash" placeholder="Access key" spellcheck="false" autocomplete="off" />
           <button class="secondary" data-save="apiflash">Save</button>
         </div>
         <div class="key-status" id="status-apiflash"></div>
-        <div class="hint">Best for lazy-loaded sites (auto-scrolls the page).</div>
+        <div class="hint">Best for heavy lazy-loaded sites — auto-scrolls the page.</div>
       </div>
     </div>
 
@@ -355,7 +356,7 @@
 
   <!-- Footer -->
   <div class="footer">
-    <span class="version">v1.2.1</span>
+    <span class="version" id="version">v1.3.0</span>
     <div class="update-area">
       <span class="update-msg" id="updateMsg"></span>
       <button class="secondary" id="checkUpdate">Check for updates</button>
@@ -365,128 +366,141 @@
   <script>
     "use strict";
 
-    const CURRENT_VERSION = "1.2.2";
-    const CACHE_KEY = "ws_plugin_cache";
-    const GITHUB_API = "https://api.github.com/repos/imiladco/claude/contents/figma-screenshot-plugin/app.html";
+    /* ──────────────────────────────────────────────
+       Constants
+    ────────────────────────────────────────────── */
+    const CURRENT_VERSION = "1.3.0";
+    const GITHUB_API = "https://api.github.com/repos/imiladco/claude/contents/figma-screenshot-plugin/ui.html";
     const KEY_PROVIDERS = ["screenshotcore", "apiflash"];
-    const FIGMA_MAX = 4096;          // Max px per image dimension in Figma.
-    const TILE_BYTE_LIMIT = 4 * 1024 * 1024;
+    const FIGMA_MAX = 4096;                  // Max px per image dimension in Figma.
+    const TILE_BYTE_LIMIT = 4 * 1024 * 1024; // ~4 MB per image in Figma.
     const enc = encodeURIComponent;
 
-    /* Surface any uncaught error so the UI is never silently dead. */
+    /* Surface any uncaught error instead of dying silently. */
     window.addEventListener("error", (e) => {
-      try {
-        const s = document.getElementById("status");
-        const t = document.getElementById("statusText");
-        if (s && t) {
-          s.className = "status error";
-          document.getElementById("statusSpinner").style.display = "none";
-          t.textContent = "Error: " + (e.message || "unknown");
-        }
-      } catch (_) {}
+      setStatus("error", "Error: " + (e.message || "unknown"));
     });
 
-    /* Crash-proof storage. Some Figma sandboxes block localStorage;
-       fall back to an in-memory store so nothing ever throws. */
-    const _mem = {};
-    const LS = {
-      get(k)    { try { return localStorage.getItem(k); } catch (_) { return k in _mem ? _mem[k] : null; } },
-      set(k, v) { try { localStorage.setItem(k, v); } catch (_) { _mem[k] = String(v); } },
-      remove(k) { try { localStorage.removeItem(k); } catch (_) { delete _mem[k]; } }
+    /* ──────────────────────────────────────────────
+       Persistent state — lives in figma.clientStorage,
+       mirrored here. Requested from the sandbox on load,
+       saved back on every change.
+    ────────────────────────────────────────────── */
+    const state = {
+      url: "",
+      width: "1440",
+      scale: "2",
+      provider: "microlink",
+      keys:    { screenshotcore: "", apiflash: "" },
+      secrets: { screenshotcore: "" }
     };
+    let ready = false;
 
-    /* ── Self-update: apply a newer cached build if present ── */
-    function versionGT(a, b) {
-      const x = a.split(".").map(Number), y = b.split(".").map(Number);
-      for (let i = 0; i < 3; i++) {
-        if ((x[i] || 0) > (y[i] || 0)) return true;
-        if ((x[i] || 0) < (y[i] || 0)) return false;
-      }
-      return false;
+    function persist() {
+      if (!ready) return;
+      parent.postMessage({ pluginMessage: { type: "save-settings", settings: state } }, "*");
     }
-    (function applyCachedBuild() {
-      try {
-        const raw = LS.get(CACHE_KEY);
-        if (!raw) return;
-        const { version, html } = JSON.parse(raw);
-        if (version && html && versionGT(version, CURRENT_VERSION)) {
-          document.open(); document.write(html); document.close();
-        }
-      } catch (_) {}
-    })();
 
-    /* ── Key storage ── */
-    const getKey = (p) => LS.get("ws_key_" + p) || "";
-    const setKey = (p, v) => v ? LS.set("ws_key_" + p, v) : LS.remove("ws_key_" + p);
-
-    /* ── Element refs ── */
+    /* ──────────────────────────────────────────────
+       Element refs
+    ────────────────────────────────────────────── */
     const $ = (id) => document.getElementById(id);
-    const btn = $("capture"), urlInput = $("url"), widthSel = $("width"),
-          scaleSel = $("scale"), providerSel = $("provider"), warn = $("warn"),
-          statusEl = $("status"), statusText = $("statusText"),
+    const urlInput   = $("url"),    widthSel = $("width"),
+          scaleSel   = $("scale"),  providerSel = $("provider"),
+          warn       = $("warn"),   captureBtn = $("capture"),
+          statusEl   = $("status"), statusText = $("statusText"),
           statusSpinner = $("statusSpinner"), statusIcon = $("statusIcon"),
-          updateBtn = $("checkUpdate"), updateMsg = $("updateMsg");
+          updateBtn  = $("checkUpdate"), updateMsg = $("updateMsg");
 
-    /* ── Tabs ── */
-    document.querySelectorAll(".tab").forEach((t) => {
-      t.addEventListener("click", () => activateTab(t.dataset.tab));
-    });
+    $("version").textContent = "v" + CURRENT_VERSION;
+
+    /* ──────────────────────────────────────────────
+       Tabs
+    ────────────────────────────────────────────── */
+    document.querySelectorAll(".tab").forEach((t) =>
+      t.addEventListener("click", () => activateTab(t.dataset.tab)));
+
     function activateTab(name) {
-      document.querySelectorAll(".tab").forEach((x) => x.classList.toggle("active", x.dataset.tab === name));
-      document.querySelectorAll(".panel").forEach((x) => x.classList.toggle("active", x.id === "panel-" + name));
-      if (name === "settings") loadKeysIntoSettings();
+      document.querySelectorAll(".tab").forEach((x) =>
+        x.classList.toggle("active", x.dataset.tab === name));
+      document.querySelectorAll(".panel").forEach((x) =>
+        x.classList.toggle("active", x.id === "panel-" + name));
     }
 
-    /* ── Settings: load / save keys ── */
-    function loadKeysIntoSettings() {
-      KEY_PROVIDERS.forEach((p) => {
-        const input = $("key-" + p);
-        if (input) input.value = getKey(p);
-        renderKeyStatus(p);
-      });
+    /* ──────────────────────────────────────────────
+       Bind controls → state
+    ────────────────────────────────────────────── */
+    urlInput.addEventListener("input", () => { state.url = urlInput.value; persist(); });
+    widthSel.addEventListener("change", () => { state.width = widthSel.value; persist(); });
+    scaleSel.addEventListener("change", () => { state.scale = scaleSel.value; persist(); });
+    providerSel.addEventListener("change", () => {
+      state.provider = providerSel.value; refreshWarning(); persist();
+    });
+    warn.addEventListener("click", () => activateTab("settings"));
+    urlInput.addEventListener("keydown", (e) => { if (e.key === "Enter") captureBtn.click(); });
+
+    function refreshWarning() {
+      const p = state.provider;
+      warn.classList.toggle("show", KEY_PROVIDERS.includes(p) && !state.keys[p]);
     }
-    function renderKeyStatus(p) {
-      const el = $("status-" + p);
-      if (!el) return;
-      el.textContent = getKey(p) ? "✓ Saved" : "";
-    }
-    document.querySelectorAll("[data-save]").forEach((b) => {
+
+    /* ──────────────────────────────────────────────
+       Settings: save / clear keys
+    ────────────────────────────────────────────── */
+    document.querySelectorAll("[data-save]").forEach((b) =>
       b.addEventListener("click", () => {
         const p = b.dataset.save;
-        setKey(p, $("key-" + p).value.trim());
+        state.keys[p] = $("key-" + p).value.trim();
+        if (p in state.secrets) {
+          const sEl = $("secret-" + p);
+          if (sEl) state.secrets[p] = sEl.value.trim();
+        }
+        persist();
         renderKeyStatus(p);
-        b.textContent = "Saved ✓";
-        setTimeout(() => (b.textContent = "Save"), 1400);
         refreshWarning();
-      });
-    });
+        b.textContent = "Saved";
+        setTimeout(() => (b.textContent = "Save"), 1300);
+      }));
+
     $("clearKeys").addEventListener("click", () => {
-      KEY_PROVIDERS.forEach((p) => setKey(p, ""));
-      loadKeysIntoSettings();
+      KEY_PROVIDERS.forEach((p) => { state.keys[p] = ""; });
+      Object.keys(state.secrets).forEach((p) => { state.secrets[p] = ""; });
+      persist();
+      syncSettingsInputs();
+      KEY_PROVIDERS.forEach(renderKeyStatus);
       refreshWarning();
     });
 
-    /* ── Provider / warning state ── */
-    (function restore() {
-      try {
-        const sp = LS.get("ws_provider");
-        if (sp) providerSel.value = sp;
-        urlInput.value = LS.get("ws_last_url") || "https://";
-      } catch (_) { urlInput.value = "https://"; }
-    })();
-    providerSel.addEventListener("change", () => {
-      LS.set("ws_provider", providerSel.value);
-      refreshWarning();
-    });
-    function refreshWarning() {
-      const p = providerSel.value;
-      warn.classList.toggle("show", KEY_PROVIDERS.includes(p) && !getKey(p));
+    function renderKeyStatus(p) {
+      const el = $("status-" + p);
+      if (el) el.textContent = state.keys[p] ? "Saved" : "";
     }
-    warn.addEventListener("click", () => activateTab("settings"));
-    refreshWarning();
 
-    /* ── Status helpers ── */
+    function syncSettingsInputs() {
+      KEY_PROVIDERS.forEach((p) => {
+        const k = $("key-" + p);    if (k) k.value = state.keys[p] || "";
+        const s = $("secret-" + p); if (s) s.value = state.secrets[p] || "";
+      });
+    }
+
+    /* ──────────────────────────────────────────────
+       Apply state to all controls (after load)
+    ────────────────────────────────────────────── */
+    function applyState() {
+      urlInput.value = state.url || "";
+      widthSel.value = state.width || "1440";
+      scaleSel.value = state.scale || "2";
+      providerSel.value = state.provider || "microlink";
+      syncSettingsInputs();
+      KEY_PROVIDERS.forEach(renderKeyStatus);
+      refreshWarning();
+    }
+
+    /* ──────────────────────────────────────────────
+       Status helper
+    ────────────────────────────────────────────── */
     function setStatus(type, msg) {
+      if (!statusEl) return;
       statusEl.className = "status " + type;
       statusText.textContent = msg;
       const loading = type === "loading";
@@ -495,19 +509,44 @@
       statusIcon.textContent = type === "success" ? "✓" : type === "error" ? "✕" : "";
     }
 
-    /* ── Screenshot providers → each returns a single Blob ── */
+    /* ──────────────────────────────────────────────
+       Request signing (ScreenshotCore HMAC-SHA256)
+       Canonical string = params (excluding access_key /
+       signature), sorted by key, PHP http_build_query
+       style (space → "+"), then HMAC-SHA256 → hex.
+    ────────────────────────────────────────────── */
+    function phpEncode(s) {
+      return encodeURIComponent(s)
+        .replace(/%20/g, "+")
+        .replace(/[!'()*~]/g, (c) => "%" + c.charCodeAt(0).toString(16).toUpperCase());
+    }
+    function canonicalQuery(params) {
+      return Object.keys(params).sort()
+        .map((k) => phpEncode(k) + "=" + phpEncode(String(params[k])))
+        .join("&");
+    }
+    async function hmacHex(secret, message) {
+      const tenc = new TextEncoder();
+      const key = await crypto.subtle.importKey(
+        "raw", tenc.encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+      const sig = await crypto.subtle.sign("HMAC", key, tenc.encode(message));
+      return [...new Uint8Array(sig)].map((b) => b.toString(16).padStart(2, "0")).join("");
+    }
+
+    /* ──────────────────────────────────────────────
+       Providers — each resolves to a single image Blob
+    ────────────────────────────────────────────── */
     async function fetchBlob(url) {
       const r = await fetch(url);
       if (!r.ok) {
         let detail = "";
-        try { detail = (await r.text()).slice(0, 140); } catch (_) {}
-        throw new Error(`HTTP ${r.status}${detail ? " — " + detail : ""}`);
+        try { detail = (await r.text()).slice(0, 160); } catch (_) {}
+        throw new Error("HTTP " + r.status + (detail ? " — " + detail : ""));
       }
       const blob = await r.blob();
       if (!blob.type.startsWith("image/")) {
-        // Some APIs return JSON errors with 200; surface them.
         const txt = await blob.text().catch(() => "");
-        throw new Error(txt ? txt.slice(0, 140) : "Provider did not return an image.");
+        throw new Error(txt ? txt.slice(0, 160) : "Provider did not return an image.");
       }
       return blob;
     }
@@ -515,47 +554,72 @@
     const PROVIDERS = {
       microlink: async (url, w, scale) => {
         const api =
-          `https://api.microlink.io/?url=${enc(url)}&screenshot=true&meta=false` +
-          `&fullPage=true&type=png&viewport.width=${w}&viewport.deviceScaleFactor=${scale}` +
-          `&disableAnimations=true&waitForTimeout=3500`;
+          "https://api.microlink.io/?url=" + enc(url) +
+          "&screenshot=true&meta=false&fullPage=true&type=png" +
+          "&viewport.width=" + w + "&viewport.deviceScaleFactor=" + scale +
+          "&disableAnimations=true&waitForTimeout=3500";
         const r = await fetch(api);
-        if (!r.ok) throw new Error(`microlink HTTP ${r.status}`);
+        if (!r.ok) throw new Error("microlink HTTP " + r.status);
         const j = await r.json();
-        if (j.status !== "success" || !j.data || !j.data.screenshot || !j.data.screenshot.url)
-          throw new Error((j.message || "microlink could not capture this URL."));
-        return fetchBlob(j.data.screenshot.url);
+        const shot = j && j.data && j.data.screenshot && j.data.screenshot.url;
+        if (j.status !== "success" || !shot)
+          throw new Error(j.message || "microlink could not capture this URL.");
+        return fetchBlob(shot);
       },
+
       thum: (url, w) =>
-        fetchBlob(`https://image.thum.io/get/width/${w}/fullpage/noanimate/${url}`),
-      screenshotcore: (url, w, scale, key) => {
-        if (!key) throw new Error("ScreenshotCore API key required (Settings).");
-        return fetchBlob(
-          `https://screenshotcore.com/api/v1/screenshot?access_key=${enc(key)}&url=${enc(url)}` +
-          `&viewport_width=${w}&device_scale_factor=${scale}&full_page=true` +
-          `&format=png&block=ads,trackers&delay=3`
-        );
+        fetchBlob("https://image.thum.io/get/width/" + w + "/fullpage/noanimate/" + url),
+
+      screenshotcore: async (url, w, scale, key, secret) => {
+        if (!key) throw new Error("ScreenshotCore access key required (Settings).");
+        const params = {
+          url,
+          format: "png",
+          viewport_width: w,
+          device_scale_factor: scale,
+          full_page: "true",
+          full_page_scroll_delay: 300,
+          block_ads: "true",
+          block_trackers: "true",
+          block_cookie_banners: "true",
+          block_chats: "true",
+          wait_until: "networkidle2",
+          delay: 2000
+        };
+        const canonical = canonicalQuery(params);
+        let qs = canonical + "&access_key=" + enc(key);
+        if (secret && window.crypto && crypto.subtle) {
+          qs += "&signature=" + await hmacHex(secret, canonical);
+        }
+        return fetchBlob("https://screenshotcore.com/api/v1/screenshot?" + qs);
       },
+
       apiflash: (url, w, scale, key) => {
-        if (!key) throw new Error("ApiFlash API key required (Settings).");
+        if (!key) throw new Error("ApiFlash access key required (Settings).");
         return fetchBlob(
-          `https://api.apiflash.com/v1/urltoimage?access_key=${enc(key)}&url=${enc(url)}` +
-          `&width=${w}&full_page=true&format=png&scale_factor=${scale}` +
-          `&scroll_page=true&wait_until=network_idle&delay=3`
+          "https://api.apiflash.com/v1/urltoimage?access_key=" + enc(key) +
+          "&url=" + enc(url) + "&width=" + w + "&scale_factor=" + scale +
+          "&full_page=true&scroll_page=true&format=png" +
+          "&no_cookie_banners=true&no_ads=true&no_tracking=true" +
+          "&wait_until=network_idle&delay=3"
         );
       }
     };
 
-    /* ── Tiling: split a tall screenshot into ≤4096px slices ── */
+    /* ──────────────────────────────────────────────
+       Tiling — split a tall screenshot into ≤4096px
+       slices so Figma can ingest each one.
+    ────────────────────────────────────────────── */
     async function buildTiles(blob, onProgress) {
       const bmp = await createImageBitmap(blob);
       const ow = bmp.width, oh = bmp.height;
 
-      // Scale the whole image down if it is wider than Figma allows.
+      // Scale down if wider than Figma allows.
       const scale = ow > FIGMA_MAX ? FIGMA_MAX / ow : 1;
       const W = Math.round(ow * scale);
       const H = Math.round(oh * scale);
 
-      const tileCount = Math.ceil(H / FIGMA_MAX);
+      const tileCount = Math.max(1, Math.ceil(H / FIGMA_MAX));
       const tiles = [];
       let y = 0, idx = 0;
 
@@ -565,7 +629,6 @@
         const th = Math.min(FIGMA_MAX, H - y);
         const cv = new OffscreenCanvas(W, th);
         const ctx = cv.getContext("2d");
-        // Source region in original-image coordinates.
         ctx.drawImage(bmp, 0, y / scale, ow, th / scale, 0, 0, W, th);
 
         let out = await cv.convertToBlob({ type: "image/png" });
@@ -578,61 +641,67 @@
         });
         y += th;
       }
-      bmp.close && bmp.close();
+      if (bmp.close) bmp.close();
       return { tiles, totalWidth: W, totalHeight: H };
     }
 
-    /* ── Normalize URL ── */
+    /* ──────────────────────────────────────────────
+       URL normalization
+    ────────────────────────────────────────────── */
     function normalizeUrl(raw) {
-      let u = raw.trim();
+      let u = (raw || "").trim();
       if (!u || u === "https://" || u === "http://") return "";
       if (!/^https?:\/\//i.test(u)) u = "https://" + u;
       try { new URL(u); } catch (_) { return ""; }
       return u;
     }
 
-    /* ── Capture flow ── */
-    btn.addEventListener("click", async () => {
+    /* ──────────────────────────────────────────────
+       Capture flow
+    ────────────────────────────────────────────── */
+    captureBtn.addEventListener("click", async () => {
       const url = normalizeUrl(urlInput.value);
       if (!url) { setStatus("error", "Please enter a valid URL."); return; }
       urlInput.value = url;
-      LS.set("ws_last_url", url);
+      state.url = url; persist();
 
-      const provider = providerSel.value;
-      const key = getKey(provider);
+      const provider = state.provider;
+      const key = state.keys[provider] || "";
+      const secret = state.secrets[provider] || "";
       if (KEY_PROVIDERS.includes(provider) && !key) {
         setStatus("error", "API key missing — open Settings.");
-        activateTab("capture");
-        warn.classList.add("show");
+        activateTab("settings");
         return;
       }
 
-      const w = parseInt(widthSel.value, 10);
-      const scale = parseInt(scaleSel.value, 10);
+      const w = parseInt(state.width, 10);
+      const scale = parseInt(state.scale, 10);
       const label = providerSel.options[providerSel.selectedIndex].text.split(" —")[0];
 
-      btn.disabled = true;
-      setStatus("loading", `Capturing via ${label}…`);
+      captureBtn.disabled = true;
+      setStatus("loading", "Capturing via " + label + "…");
 
       try {
-        const blob = await PROVIDERS[provider](url, w, scale, key);
+        const blob = await PROVIDERS[provider](url, w, scale, key, secret);
         setStatus("loading", "Processing image…");
         const { tiles, totalWidth, totalHeight } = await buildTiles(blob, (i, n) => {
-          if (n > 1) setStatus("loading", `Slicing tile ${i}/${n}…`);
+          if (n > 1) setStatus("loading", "Slicing tile " + i + "/" + n + "…");
         });
         setStatus("loading", "Adding to canvas…");
         parent.postMessage({ pluginMessage: {
-          type: "add-tiles", tiles, totalWidth, totalHeight, url
-        }}, "*");
+          type: "add-image", tiles, totalWidth, totalHeight, url
+        } }, "*");
       } catch (err) {
         setStatus("error", (err && err.message) ? err.message : "Capture failed.");
-        btn.disabled = false;
+        captureBtn.disabled = false;
       }
     });
 
-    urlInput.addEventListener("keydown", (e) => { if (e.key === "Enter") btn.click(); });
-
-    /* ── Update check via GitHub API ── */
+    /* ──────────────────────────────────────────────
+       Update check — fetch latest ui.html from GitHub,
+       hand it to the sandbox which persists it in
+       clientStorage and swaps the UI live.
+    ────────────────────────────────────────────── */
     updateBtn.addEventListener("click", async () => {
       updateBtn.disabled = true;
       updateMsg.className = "update-msg";
@@ -647,35 +716,63 @@
         const m = html.match(/CURRENT_VERSION\s*=\s*["']([^"']+)["']/);
         if (!m) throw new Error("parse");
         const latest = m[1];
+
         if (!versionGT(latest, CURRENT_VERSION)) {
           updateMsg.className = "update-msg ok";
           updateMsg.textContent = "Up to date";
           updateBtn.disabled = false;
           return;
         }
-        LS.set(CACHE_KEY, JSON.stringify({ version: latest, html }));
         updateMsg.className = "update-msg new";
-        updateMsg.textContent = `Updating to v${latest}…`;
-        setTimeout(() => { document.open(); document.write(html); document.close(); }, 700);
-      } catch (e) {
+        updateMsg.textContent = "Updating to v" + latest + "…";
+        parent.postMessage({ pluginMessage: {
+          type: "apply-update", version: latest, html
+        } }, "*");
+      } catch (_) {
         updateMsg.className = "update-msg err";
         updateMsg.textContent = "Update check failed";
         updateBtn.disabled = false;
       }
     });
 
-    /* ── Messages from the sandbox ── */
+    function versionGT(a, b) {
+      const x = String(a).split(".").map(Number), y = String(b).split(".").map(Number);
+      for (let i = 0; i < 3; i++) {
+        if ((x[i] || 0) > (y[i] || 0)) return true;
+        if ((x[i] || 0) < (y[i] || 0)) return false;
+      }
+      return false;
+    }
+
+    /* ──────────────────────────────────────────────
+       Messages from the sandbox
+    ────────────────────────────────────────────── */
     window.onmessage = (e) => {
       const msg = e.data.pluginMessage;
       if (!msg) return;
-      if (msg.type === "done") {
-        setStatus("success", "Screenshot added to canvas.");
-        btn.disabled = false;
-      } else if (msg.type === "error") {
-        setStatus("error", msg.message || "Something went wrong.");
-        btn.disabled = false;
+      switch (msg.type) {
+        case "init":
+          if (msg.settings) {
+            Object.assign(state, msg.settings);
+            state.keys    = Object.assign({ screenshotcore: "", apiflash: "" }, msg.settings.keys);
+            state.secrets = Object.assign({ screenshotcore: "" }, msg.settings.secrets);
+          }
+          ready = true;
+          applyState();
+          break;
+        case "done":
+          setStatus("success", "Screenshot added to canvas.");
+          captureBtn.disabled = false;
+          break;
+        case "error":
+          setStatus("error", msg.message || "Something went wrong.");
+          captureBtn.disabled = false;
+          break;
       }
     };
+
+    /* Ask the sandbox for saved settings. */
+    parent.postMessage({ pluginMessage: { type: "ui-ready" } }, "*");
   </script>
 </body>
 </html>
