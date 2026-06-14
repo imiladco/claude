@@ -30,7 +30,7 @@
       line-height: 1.5;
       display: flex;
       flex-direction: column;
-      min-height: 100vh;
+      height: 100vh;
       overflow: hidden;
     }
 
@@ -76,7 +76,7 @@
     .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
 
     /* Panels */
-    .panel { display: none; flex-direction: column; gap: 12px; padding: 14px 16px; flex: 1; }
+    .panel { display: none; flex-direction: column; gap: 12px; padding: 14px 16px; flex: 1; overflow-y: auto; }
     .panel.active { display: flex; }
 
     /* Fields */
@@ -376,7 +376,7 @@
 
   <!-- Footer (always visible) -->
   <div class="footer">
-    <span class="version">v1.0.9</span>
+    <span class="version">v1.1.0</span>
     <div class="update-area">
       <span class="update-msg" id="updateMsg"></span>
       <button id="checkUpdate">Check for updates</button>
@@ -384,7 +384,7 @@
   </div>
 
   <script>
-    const CURRENT_VERSION = "1.0.9";
+    const CURRENT_VERSION = "1.1.0";
     const CACHE_KEY = "ws_plugin_cache";
     const API_URL = "https://api.github.com/repos/imiladco/claude/contents/figma-screenshot-plugin/app.html";
     const KEY_PROVIDERS = ["screenshotone", "apiflash"];

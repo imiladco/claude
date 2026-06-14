@@ -1,4 +1,4 @@
-figma.showUI(__html__, { width: 420, height: 380, title: "Website Screenshot" });
+figma.showUI(__html__, { width: 380, height: 500, title: "Website Screenshot" });
 
 figma.ui.onmessage = async (msg) => {
   if (msg.type === "add-image") {
