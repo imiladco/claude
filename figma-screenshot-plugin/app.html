@@ -2,378 +2,384 @@
 <html lang="fa" dir="rtl">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Website Screenshot</title>
   <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #141414;
+      --surface: #1c1c1c;
+      --border: #2a2a2a;
+      --border-focus: #5a5af4;
+      --text: #f0f0f0;
+      --text-secondary: #6b6b6b;
+      --accent: #5a5af4;
+      --accent-hover: #6b6bf5;
+      --success: #22c55e;
+      --error: #ef4444;
+      --warning: #f59e0b;
+      --radius: 6px;
     }
 
     body {
       font-family: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
-      background: #1e1e1e;
-      color: #e0e0e0;
-      padding: 20px;
-      min-height: 380px;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 13px;
+      line-height: 1.5;
+      padding: 16px;
       display: flex;
       flex-direction: column;
-      gap: 16px;
+      gap: 12px;
+      min-height: 100vh;
     }
 
     .header {
       display: flex;
       align-items: center;
-      gap: 10px;
-      border-bottom: 1px solid #333;
-      padding-bottom: 14px;
+      gap: 8px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border);
     }
 
-    .header-icon {
-      width: 32px;
-      height: 32px;
-      background: linear-gradient(135deg, #6366f1, #8b5cf6);
-      border-radius: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 16px;
-      flex-shrink: 0;
-    }
+    .logo { width: 24px; height: 24px; flex-shrink: 0; color: var(--accent); }
 
-    .header-text h2 {
-      font-size: 14px;
+    .header h1 {
+      font-size: 13px;
       font-weight: 600;
-      color: #fff;
+      color: var(--text);
+      letter-spacing: -0.01em;
     }
 
-    .header-text p {
-      font-size: 11px;
-      color: #888;
-      margin-top: 2px;
-    }
+    .field { display: flex; flex-direction: column; gap: 5px; }
 
-    label {
+    .field label {
       font-size: 11px;
       font-weight: 500;
-      color: #aaa;
-      display: block;
-      margin-bottom: 6px;
-      letter-spacing: 0.03em;
+      color: var(--text-secondary);
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
     }
 
-    input[type="url"] {
+    input[type="url"], select {
       width: 100%;
-      padding: 10px 12px;
-      background: #2a2a2a;
-      border: 1px solid #3a3a3a;
-      border-radius: 8px;
-      color: #fff;
-      font-size: 13px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text);
+      font-size: 12px;
+      font-family: inherit;
       outline: none;
-      transition: border-color 0.2s;
-      direction: ltr;
-      text-align: left;
+      transition: border-color 0.15s;
     }
 
-    input[type="url"]:focus {
-      border-color: #6366f1;
-    }
-
-    input[type="url"]::placeholder {
-      color: #555;
-    }
-
-    .options {
-      display: flex;
-      gap: 10px;
-    }
-
-    .option-group {
-      flex: 1;
-    }
+    input[type="url"] { padding: 8px 10px; direction: ltr; }
+    input[type="url"]::placeholder { color: #3a3a3a; }
+    input[type="url"]:focus, select:focus { border-color: var(--border-focus); }
 
     select {
-      width: 100%;
-      padding: 8px 10px;
-      background: #2a2a2a;
-      border: 1px solid #3a3a3a;
-      border-radius: 8px;
-      color: #e0e0e0;
-      font-size: 12px;
-      outline: none;
+      padding: 8px 28px 8px 10px;
       cursor: pointer;
-      transition: border-color 0.2s;
       appearance: none;
       -webkit-appearance: none;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23888' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='%234a4a4a' d='M5 6L0 0h10z'/%3E%3C/svg%3E");
       background-repeat: no-repeat;
       background-position: left 10px center;
-      padding-left: 28px;
     }
 
-    select:focus {
-      border-color: #6366f1;
-    }
+    .row { display: flex; gap: 8px; }
+    .row .field { flex: 1; }
 
     button#capture {
       width: 100%;
-      padding: 12px;
-      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      padding: 9px 16px;
+      background: var(--accent);
       border: none;
-      border-radius: 8px;
+      border-radius: var(--radius);
       color: #fff;
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: opacity 0.2s, transform 0.1s;
-      letter-spacing: 0.02em;
-    }
-
-    button#capture:hover:not(:disabled) {
-      opacity: 0.9;
-    }
-
-    button#capture:active:not(:disabled) {
-      transform: scale(0.98);
-    }
-
-    button#capture:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-
-    .status {
-      display: none;
-      padding: 10px 14px;
-      border-radius: 8px;
       font-size: 12px;
-      line-height: 1.5;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      letter-spacing: 0.01em;
+      transition: background 0.15s, opacity 0.15s;
     }
 
-    .status.loading {
+    button#capture:hover:not(:disabled) { background: var(--accent-hover); }
+    button#capture:active:not(:disabled) { opacity: 0.85; }
+    button#capture:disabled { opacity: 0.35; cursor: not-allowed; }
+
+    .status { display: none; font-size: 12px; }
+
+    .status-inner {
       display: flex;
       align-items: center;
-      gap: 10px;
-      background: #1a2744;
-      border: 1px solid #2d4a8f;
-      color: #7aadff;
+      gap: 8px;
+      padding: 8px 10px;
+      border-radius: var(--radius);
     }
 
-    .status.success {
-      display: block;
-      background: #0f2d1f;
-      border: 1px solid #1a5c38;
-      color: #4ade80;
-    }
+    .status.loading .status-inner { color: #7aadff; background: rgba(90,90,244,0.08); border: 1px solid rgba(90,90,244,0.2); }
+    .status.success .status-inner { color: var(--success); background: rgba(34,197,94,0.07); border: 1px solid rgba(34,197,94,0.2); }
+    .status.error .status-inner   { color: var(--error);   background: rgba(239,68,68,0.07);  border: 1px solid rgba(239,68,68,0.2); }
+    .status.loading, .status.success, .status.error { display: block; }
 
-    .status.error {
-      display: block;
-      background: #2d1212;
-      border: 1px solid #5c1a1a;
-      color: #f87171;
-    }
-
-    .spinner {
-      width: 16px;
-      height: 16px;
-      border: 2px solid #2d4a8f;
-      border-top-color: #7aadff;
+    .dot {
+      width: 6px; height: 6px;
       border-radius: 50%;
-      animation: spin 0.7s linear infinite;
       flex-shrink: 0;
+      background: currentColor;
+      animation: pulse 1.2s ease-in-out infinite;
+    }
+    .status.success .dot, .status.error .dot { animation: none; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+    .footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-top: 10px;
+      border-top: 1px solid var(--border);
+      margin-top: auto;
     }
 
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
+    .version { font-size: 11px; color: var(--text-secondary); }
+    .update-area { display: flex; align-items: center; gap: 8px; }
+    .update-msg { font-size: 11px; }
+    .update-msg.ok  { color: var(--success); }
+    .update-msg.new { color: var(--warning); }
+    .update-msg.err { color: var(--error); }
 
-    .tip {
+    button#checkUpdate {
+      padding: 4px 10px;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text-secondary);
       font-size: 11px;
-      color: #555;
-      text-align: center;
+      font-family: inherit;
+      cursor: pointer;
+      transition: border-color 0.15s, color 0.15s;
+      white-space: nowrap;
     }
+    button#checkUpdate:hover:not(:disabled) { border-color: var(--accent); color: var(--text); }
+    button#checkUpdate:disabled { opacity: 0.4; cursor: not-allowed; }
   </style>
 </head>
 <body>
+
   <div class="header">
-    <div class="header-icon">🌐</div>
-    <div class="header-text">
-      <h2>Website Screenshot</h2>
-      <p>اسکرین‌شات کامل سایت رو به فیگما اضافه کن</p>
-    </div>
+    <svg class="logo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="2" y="3" width="20" height="14" rx="2"/>
+      <path d="M8 21h8M12 17v4"/>
+      <circle cx="12" cy="10" r="3"/>
+    </svg>
+    <h1>Website Screenshot</h1>
   </div>
 
-  <div>
-    <label>آدرس سایت</label>
-    <input
-      type="url"
-      id="url"
-      placeholder="https://example.com"
-      value="https://"
-    />
+  <div class="field">
+    <label>URL</label>
+    <input type="url" id="url" placeholder="https://example.com" value="https://" spellcheck="false" />
   </div>
 
-  <div class="options">
-    <div class="option-group">
-      <label>عرض (px)</label>
+  <div class="row">
+    <div class="field">
+      <label>Viewport</label>
       <select id="width">
-        <option value="1440">1440 — دسکتاپ Full HD</option>
-        <option value="1920">1920 — دسکتاپ 2K</option>
-        <option value="1280">1280 — لپ‌تاپ</option>
-        <option value="768">768 — تبلت</option>
-        <option value="390">390 — موبایل</option>
+        <option value="1440">1440px — Desktop</option>
+        <option value="1920">1920px — Wide</option>
+        <option value="1280">1280px — Laptop</option>
+        <option value="768">768px — Tablet</option>
+        <option value="390">390px — Mobile</option>
       </select>
     </div>
-    <div class="option-group">
-      <label>کیفیت</label>
+    <div class="field">
+      <label>Scale</label>
       <select id="quality">
-        <option value="2">2x — بالا</option>
-        <option value="1">1x — استاندارد</option>
-        <option value="3">3x — فوق‌العاده</option>
+        <option value="2">2x</option>
+        <option value="1">1x</option>
+        <option value="3">3x</option>
       </select>
     </div>
   </div>
 
-  <button id="capture">📸 گرفتن اسکرین‌شات</button>
+  <button id="capture">Capture full page</button>
 
-  <div class="status" id="status"></div>
+  <div class="status" id="status">
+    <div class="status-inner">
+      <span class="dot"></span>
+      <span id="statusText"></span>
+    </div>
+  </div>
 
-  <p class="tip">پلاگین از microlink.io برای گرفتن اسکرین‌شات استفاده می‌کنه</p>
+  <div class="footer">
+    <span class="version">v1.0.3</span>
+    <div class="update-area">
+      <span class="update-msg" id="updateMsg"></span>
+      <button id="checkUpdate">Check for updates</button>
+    </div>
+  </div>
 
   <script>
-    const CURRENT_VERSION = "1.0.1";
+    const CURRENT_VERSION = "1.0.3";
+    const CACHE_KEY = "ws_plugin_cache";
+    const APP_URL = "https://raw.githubusercontent.com/imiladco/claude/main/figma-screenshot-plugin/app.html";
 
-    const btn = document.getElementById("capture");
-    const urlInput = document.getElementById("url");
-    const widthSel = document.getElementById("width");
-    const qualitySel = document.getElementById("quality");
-    const statusEl = document.getElementById("status");
-
-    const MAX_DIMENSION = 4096;
-    const MAX_BYTES = 3.5 * 1024 * 1024; // 3.5 MB safe limit for Figma
-
-    async function compressImage(blob, origWidth, origHeight) {
-      const bitmap = await createImageBitmap(blob);
-      let w = bitmap.width || origWidth;
-      let h = bitmap.height || origHeight;
-
-      // Scale down if exceeds max dimension
-      if (w > MAX_DIMENSION || h > MAX_DIMENSION) {
-        const ratio = Math.min(MAX_DIMENSION / w, MAX_DIMENSION / h);
-        w = Math.round(w * ratio);
-        h = Math.round(h * ratio);
-      }
-
-      const canvas = new OffscreenCanvas(w, h);
-      const ctx = canvas.getContext("2d");
-      ctx.drawImage(bitmap, 0, 0, w, h);
-
-      // Try JPEG at decreasing quality until under size limit
-      const qualities = [0.92, 0.80, 0.65, 0.50];
-      for (const q of qualities) {
-        const outBlob = await canvas.convertToBlob({ type: "image/jpeg", quality: q });
-        if (outBlob.size <= MAX_BYTES) {
-          const buf = await outBlob.arrayBuffer();
-          return { data: new Uint8Array(buf), width: w, height: h };
+    (function applyCacheIfNewer() {
+      try {
+        const raw = localStorage.getItem(CACHE_KEY);
+        if (!raw) return;
+        const { version, html } = JSON.parse(raw);
+        if (version && version !== CURRENT_VERSION) {
+          document.open();
+          document.write(html);
+          document.close();
         }
-      }
+      } catch (_) {}
+    })();
 
-      // Last resort: scale image down further
-      const scale = Math.sqrt(MAX_BYTES / (await canvas.convertToBlob({ type: "image/jpeg", quality: 0.5 }).then(b => b.size)));
-      const sw = Math.round(w * scale);
-      const sh = Math.round(h * scale);
-      const canvas2 = new OffscreenCanvas(sw, sh);
-      canvas2.getContext("2d").drawImage(bitmap, 0, 0, sw, sh);
-      const finalBlob = await canvas2.convertToBlob({ type: "image/jpeg", quality: 0.7 });
-      const buf = await finalBlob.arrayBuffer();
-      return { data: new Uint8Array(buf), width: sw, height: sh };
+    const btn        = document.getElementById("capture");
+    const urlInput   = document.getElementById("url");
+    const widthSel   = document.getElementById("width");
+    const qualitySel = document.getElementById("quality");
+    const statusEl   = document.getElementById("status");
+    const statusText = document.getElementById("statusText");
+    const updateBtn  = document.getElementById("checkUpdate");
+    const updateMsg  = document.getElementById("updateMsg");
+
+    const MAX_DIM   = 4096;
+    const MAX_BYTES = 3.5 * 1024 * 1024;
+
+    function setStatus(type, msg) {
+      statusEl.className = "status " + type;
+      statusText.textContent = msg;
     }
 
-    function setStatus(type, message) {
-      statusEl.className = "status " + type;
-      if (type === "loading") {
-        statusEl.innerHTML = `<div class="spinner"></div><span>${message}</span>`;
-      } else {
-        statusEl.textContent = message;
+    async function compressImage(blob, origW, origH) {
+      const bmp = await createImageBitmap(blob);
+      let w = bmp.width || origW;
+      let h = bmp.height || origH;
+
+      if (w > MAX_DIM || h > MAX_DIM) {
+        const r = Math.min(MAX_DIM / w, MAX_DIM / h);
+        w = Math.round(w * r);
+        h = Math.round(h * r);
       }
+
+      const cv = new OffscreenCanvas(w, h);
+      cv.getContext("2d").drawImage(bmp, 0, 0, w, h);
+
+      for (const q of [0.92, 0.80, 0.65, 0.50]) {
+        const b = await cv.convertToBlob({ type: "image/jpeg", quality: q });
+        if (b.size <= MAX_BYTES)
+          return { data: new Uint8Array(await b.arrayBuffer()), width: w, height: h };
+      }
+
+      const over = await cv.convertToBlob({ type: "image/jpeg", quality: 0.5 });
+      const scale = Math.sqrt(MAX_BYTES / over.size);
+      const sw = Math.round(w * scale), sh = Math.round(h * scale);
+      const cv2 = new OffscreenCanvas(sw, sh);
+      cv2.getContext("2d").drawImage(bmp, 0, 0, sw, sh);
+      const fin = await cv2.convertToBlob({ type: "image/jpeg", quality: 0.7 });
+      return { data: new Uint8Array(await fin.arrayBuffer()), width: sw, height: sh };
     }
 
     btn.addEventListener("click", async () => {
       const url = urlInput.value.trim();
       if (!url || url === "https://") {
-        setStatus("error", "لطفاً آدرس سایت را وارد کنید.");
+        setStatus("error", "Please enter a valid URL.");
         return;
       }
 
-      const viewportWidth = parseInt(widthSel.value);
-      const deviceScaleFactor = parseInt(qualitySel.value);
-
       btn.disabled = true;
-      setStatus("loading", "در حال ارتباط با سرویس اسکرین‌شات...");
+      setStatus("loading", "Requesting screenshot…");
 
       try {
         const apiUrl =
           `https://api.microlink.io/?url=${encodeURIComponent(url)}` +
           `&screenshot=true&meta=false&fullPage=true&type=png` +
-          `&viewport.width=${viewportWidth}` +
-          `&viewport.deviceScaleFactor=${deviceScaleFactor}`;
+          `&viewport.width=${widthSel.value}` +
+          `&viewport.deviceScaleFactor=${qualitySel.value}` +
+          `&waitForTimeout=2500` +
+          `&disableAnimations=true`;
 
         const apiRes = await fetch(apiUrl);
-        if (!apiRes.ok) throw new Error(`خطای سرور: ${apiRes.status}`);
+        if (!apiRes.ok) throw new Error(`Server error ${apiRes.status}`);
 
-        const apiJson = await apiRes.json();
+        const json = await apiRes.json();
+        if (json.status !== "success" || !json.data?.screenshot?.url)
+          throw new Error("Screenshot failed. Check the URL and try again.");
 
-        if (apiJson.status !== "success" || !apiJson.data?.screenshot?.url) {
-          throw new Error("اسکرین‌شات دریافت نشد. URL را بررسی کنید.");
-        }
+        setStatus("loading", "Downloading image…");
+        const imgRes = await fetch(json.data.screenshot.url);
+        if (!imgRes.ok) throw new Error("Failed to download image.");
 
-        const screenshotUrl = apiJson.data.screenshot.url;
-        const naturalWidth = apiJson.data.screenshot.width || viewportWidth;
-        const naturalHeight = apiJson.data.screenshot.height || 900;
-
-        setStatus("loading", "در حال دانلود تصویر...");
-
-        const imgRes = await fetch(screenshotUrl);
-        if (!imgRes.ok) throw new Error("خطا در دانلود تصویر");
-
-        const blob = await imgRes.blob();
-
-        setStatus("loading", "در حال پردازش تصویر...");
-
-        const { data: imageData, width: finalWidth, height: finalHeight } =
-          await compressImage(blob, naturalWidth, naturalHeight);
-
-        setStatus("loading", "در حال افزودن به فیگما...");
-
-        parent.postMessage(
-          {
-            pluginMessage: {
-              type: "add-image",
-              imageData: Array.from(imageData),
-              naturalWidth: finalWidth,
-              naturalHeight: finalHeight,
-              url,
-            },
-          },
-          "*"
+        setStatus("loading", "Processing…");
+        const { data, width, height } = await compressImage(
+          await imgRes.blob(),
+          json.data.screenshot.width || parseInt(widthSel.value),
+          json.data.screenshot.height || 900
         );
+
+        setStatus("loading", "Adding to canvas…");
+        parent.postMessage({
+          pluginMessage: { type: "add-image", imageData: Array.from(data), naturalWidth: width, naturalHeight: height, url }
+        }, "*");
+
       } catch (err) {
-        setStatus("error", "❌ " + (err.message || "خطای ناشناخته"));
+        setStatus("error", err.message || "Unknown error.");
         btn.disabled = false;
       }
     });
 
-    window.onmessage = (event) => {
-      const msg = event.data.pluginMessage;
-      if (!msg) return;
+    updateBtn.addEventListener("click", async () => {
+      updateBtn.disabled = true;
+      updateMsg.className = "update-msg";
+      updateMsg.textContent = "Checking…";
 
+      try {
+        const res = await fetch(APP_URL + "?t=" + Date.now());
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+        const html = await res.text();
+        const match = html.match(/CURRENT_VERSION\s*=\s*["']([^"']+)["']/);
+        if (!match) throw new Error("Version not found");
+
+        const latest = match[1];
+
+        if (latest === CURRENT_VERSION) {
+          updateMsg.className = "update-msg ok";
+          updateMsg.textContent = "Up to date";
+          updateBtn.disabled = false;
+          return;
+        }
+
+        localStorage.setItem(CACHE_KEY, JSON.stringify({ version: latest, html }));
+
+        updateMsg.className = "update-msg new";
+        updateMsg.textContent = `v${latest} installed — reloading…`;
+
+        setTimeout(() => {
+          document.open();
+          document.write(html);
+          document.close();
+        }, 600);
+
+      } catch (err) {
+        updateMsg.className = "update-msg err";
+        updateMsg.textContent = "Connection failed";
+        updateBtn.disabled = false;
+      }
+    });
+
+    window.onmessage = (e) => {
+      const msg = e.data.pluginMessage;
+      if (!msg) return;
       if (msg.type === "done") {
-        setStatus("success", "✅ اسکرین‌شات با موفقیت به فیگما اضافه شد!");
+        setStatus("success", "Screenshot added to canvas.");
         btn.disabled = false;
       } else if (msg.type === "error") {
-        setStatus("error", "❌ " + msg.message);
+        setStatus("error", msg.message);
         btn.disabled = false;
       }
     };
