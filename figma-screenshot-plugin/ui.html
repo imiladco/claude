@@ -42,12 +42,7 @@
       border-bottom: 1px solid var(--border);
     }
 
-    .logo {
-      width: 24px;
-      height: 24px;
-      flex-shrink: 0;
-      color: var(--accent);
-    }
+    .logo { width: 24px; height: 24px; flex-shrink: 0; color: var(--accent); }
 
     .header h1 {
       font-size: 13px;
@@ -114,35 +109,30 @@
     button#capture:active:not(:disabled) { opacity: 0.85; }
     button#capture:disabled { opacity: 0.35; cursor: not-allowed; }
 
-    .status { display: none; font-size: 12px; border-radius: var(--radius); overflow: hidden; }
+    .status { display: none; font-size: 12px; }
 
     .status-inner {
       display: flex;
       align-items: center;
       gap: 8px;
       padding: 8px 10px;
+      border-radius: var(--radius);
     }
 
-    .status.loading .status-inner { color: #7aadff; background: rgba(90,90,244,0.08); border: 1px solid rgba(90,90,244,0.2); border-radius: var(--radius); }
-    .status.success .status-inner { color: var(--success); background: rgba(34,197,94,0.07); border: 1px solid rgba(34,197,94,0.2); border-radius: var(--radius); }
-    .status.error .status-inner { color: var(--error); background: rgba(239,68,68,0.07); border: 1px solid rgba(239,68,68,0.2); border-radius: var(--radius); }
+    .status.loading .status-inner { color: #7aadff; background: rgba(90,90,244,0.08); border: 1px solid rgba(90,90,244,0.2); }
+    .status.success .status-inner { color: var(--success); background: rgba(34,197,94,0.07); border: 1px solid rgba(34,197,94,0.2); }
+    .status.error .status-inner   { color: var(--error);   background: rgba(239,68,68,0.07);  border: 1px solid rgba(239,68,68,0.2); }
     .status.loading, .status.success, .status.error { display: block; }
 
     .dot {
-      width: 6px;
-      height: 6px;
+      width: 6px; height: 6px;
       border-radius: 50%;
       flex-shrink: 0;
       background: currentColor;
       animation: pulse 1.2s ease-in-out infinite;
     }
-
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.3; }
-    }
-
     .status.success .dot, .status.error .dot { animation: none; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
 
     .footer {
       display: flex;
@@ -154,7 +144,6 @@
     }
 
     .version { font-size: 11px; color: var(--text-secondary); }
-
     .update-area { display: flex; align-items: center; gap: 8px; }
     .update-msg { font-size: 11px; }
     .update-msg.ok  { color: var(--success); }
@@ -173,7 +162,6 @@
       transition: border-color 0.15s, color 0.15s;
       white-space: nowrap;
     }
-
     button#checkUpdate:hover:not(:disabled) { border-color: var(--accent); color: var(--text); }
     button#checkUpdate:disabled { opacity: 0.4; cursor: not-allowed; }
   </style>
@@ -225,7 +213,7 @@
   </div>
 
   <div class="footer">
-    <span class="version">v1.0.2</span>
+    <span class="version" id="versionLabel">v1.0.3</span>
     <div class="update-area">
       <span class="update-msg" id="updateMsg"></span>
       <button id="checkUpdate">Check for updates</button>
@@ -233,8 +221,23 @@
   </div>
 
   <script>
-    const CURRENT_VERSION = "1.0.2";
+    const CURRENT_VERSION = "1.0.3";
+    const CACHE_KEY = "ws_plugin_cache";
     const APP_URL = "https://raw.githubusercontent.com/imiladco/claude/main/figma-screenshot-plugin/app.html";
+
+    // On startup: check if a newer version is cached in localStorage
+    (function applyCacheIfNewer() {
+      try {
+        const raw = localStorage.getItem(CACHE_KEY);
+        if (!raw) return;
+        const { version, html } = JSON.parse(raw);
+        if (version && version !== CURRENT_VERSION) {
+          document.open();
+          document.write(html);
+          document.close();
+        }
+      } catch (_) {}
+    })();
 
     const btn        = document.getElementById("capture");
     const urlInput   = document.getElementById("url");
@@ -269,18 +272,17 @@
 
       for (const q of [0.92, 0.80, 0.65, 0.50]) {
         const b = await cv.convertToBlob({ type: "image/jpeg", quality: q });
-        if (b.size <= MAX_BYTES) {
+        if (b.size <= MAX_BYTES)
           return { data: new Uint8Array(await b.arrayBuffer()), width: w, height: h };
-        }
       }
 
-      const oversize = await cv.convertToBlob({ type: "image/jpeg", quality: 0.5 });
-      const scale = Math.sqrt(MAX_BYTES / oversize.size);
+      const over = await cv.convertToBlob({ type: "image/jpeg", quality: 0.5 });
+      const scale = Math.sqrt(MAX_BYTES / over.size);
       const sw = Math.round(w * scale), sh = Math.round(h * scale);
       const cv2 = new OffscreenCanvas(sw, sh);
       cv2.getContext("2d").drawImage(bmp, 0, 0, sw, sh);
-      const final = await cv2.convertToBlob({ type: "image/jpeg", quality: 0.7 });
-      return { data: new Uint8Array(await final.arrayBuffer()), width: sw, height: sh };
+      const fin = await cv2.convertToBlob({ type: "image/jpeg", quality: 0.7 });
+      return { data: new Uint8Array(await fin.arrayBuffer()), width: sw, height: sh };
     }
 
     btn.addEventListener("click", async () => {
@@ -298,7 +300,9 @@
           `https://api.microlink.io/?url=${encodeURIComponent(url)}` +
           `&screenshot=true&meta=false&fullPage=true&type=png` +
           `&viewport.width=${widthSel.value}` +
-          `&viewport.deviceScaleFactor=${qualitySel.value}`;
+          `&viewport.deviceScaleFactor=${qualitySel.value}` +
+          `&waitForTimeout=2500` +
+          `&disableAnimations=true`;
 
         const apiRes = await fetch(apiUrl);
         if (!apiRes.ok) throw new Error(`Server error ${apiRes.status}`);
@@ -308,12 +312,10 @@
           throw new Error("Screenshot failed. Check the URL and try again.");
 
         setStatus("loading", "Downloading image…");
-
         const imgRes = await fetch(json.data.screenshot.url);
         if (!imgRes.ok) throw new Error("Failed to download image.");
 
         setStatus("loading", "Processing…");
-
         const { data, width, height } = await compressImage(
           await imgRes.blob(),
           json.data.screenshot.width || parseInt(widthSel.value),
@@ -321,7 +323,6 @@
         );
 
         setStatus("loading", "Adding to canvas…");
-
         parent.postMessage({
           pluginMessage: { type: "add-image", imageData: Array.from(data), naturalWidth: width, naturalHeight: height, url }
         }, "*");
@@ -346,6 +347,7 @@
         if (!match) throw new Error("Version not found");
 
         const latest = match[1];
+
         if (latest === CURRENT_VERSION) {
           updateMsg.className = "update-msg ok";
           updateMsg.textContent = "Up to date";
@@ -353,11 +355,17 @@
           return;
         }
 
+        // Cache to localStorage so it persists after plugin is closed and reopened
+        localStorage.setItem(CACHE_KEY, JSON.stringify({ version: latest, html }));
+
         updateMsg.className = "update-msg new";
-        updateMsg.textContent = `v${latest} available — installing…`;
-        document.open();
-        document.write(html);
-        document.close();
+        updateMsg.textContent = `v${latest} installed — reloading…`;
+
+        setTimeout(() => {
+          document.open();
+          document.write(html);
+          document.close();
+        }, 600);
 
       } catch (err) {
         updateMsg.className = "update-msg err";
