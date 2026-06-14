@@ -1,0 +1,12 @@
+{
+  "name": "Website Screenshot",
+  "id": "website-screenshot-imco",
+  "api": "1.0.0",
+  "main": "code.js",
+  "ui": "ui.html",
+  "networkAccess": {
+    "allowedDomains": ["*"],
+    "reasoning": "This plugin fetches full-page screenshots from microlink.io API and loads updates from raw.githubusercontent.com. The target screenshot domain varies based on user input, so wildcard access is required."
+  },
+  "editorType": ["figma"]
+}
