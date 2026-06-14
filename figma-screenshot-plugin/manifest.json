@@ -1,0 +1,11 @@
+{
+  "name": "Website Screenshot",
+  "id": "website-screenshot-imco",
+  "api": "1.0.0",
+  "main": "code.js",
+  "ui": "ui.html",
+  "networkAccess": {
+    "allowedDomains": ["*"]
+  },
+  "editorType": ["figma"]
+}
