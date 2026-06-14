@@ -11,7 +11,7 @@
 
 "use strict";
 
-const BASE_VERSION = "1.3.0";          // Must match CURRENT_VERSION in ui.html.
+const BASE_VERSION = "1.3.1";          // Must match CURRENT_VERSION in ui.html.
 const STORE_KEY    = "ws:settings";    // clientStorage: user settings + keys.
 const UI_CACHE_KEY = "ws:ui-cache";    // clientStorage: { version, html }.
 const WINDOW = { width: 380, height: 560, title: "Website Screenshot" };
@@ -91,7 +91,6 @@ async function addImage(msg) {
   let node;
 
   if (tiles.length === 1) {
-    // Fits in a single image — a plain rectangle is enough.
     const t = tiles[0];
     const image = figma.createImage(new Uint8Array(t.data));
     const rect = figma.createRectangle();
@@ -100,16 +99,18 @@ async function addImage(msg) {
     rect.fills = [{ type: "IMAGE", scaleMode: "FILL", imageHash: image.hash }];
     node = rect;
   } else {
-    // Tall capture — stack tiles seamlessly inside one clipping frame so
-    // the result reads and selects as a single object.
+    // Tall capture — stack tiles inside one clipping frame.
     const frame = figma.createFrame();
     frame.name = name;
     frame.resize(totalWidth, totalHeight);
     frame.clipsContent = true;
     frame.fills = [];
+    let i = 0;
     for (const t of tiles) {
+      i++;
       const image = figma.createImage(new Uint8Array(t.data));
       const rect = figma.createRectangle();
+      rect.name = "slice-" + i;
       rect.resize(t.width, t.height);
       rect.x = 0;
       rect.y = t.y;
@@ -131,11 +132,14 @@ async function addImage(msg) {
   figma.notify("Screenshot added");
 }
 
-// Name the layer after the site — no protocol, no trailing slash.
+// Name the layer after the site host — no protocol, no www., no trailing slash.
 function siteName(url) {
   try {
-    return new URL(url).hostname.replace(/^www\./, "");
+    const h = new URL(url).hostname.replace(/^www\./, "");
+    return h || "screenshot";
   } catch (_) {
-    return "screenshot";
+    // Fallback: strip protocol manually.
+    const m = String(url || "").match(/^https?:\/\/(?:www\.)?([^/?#]+)/i);
+    return m ? m[1] : "screenshot";
   }
 }
