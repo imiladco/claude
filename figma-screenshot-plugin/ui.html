@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="fa" dir="rtl">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <title>Website Screenshot</title>
@@ -7,373 +7,664 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg: #141414;
-      --surface: #1c1c1c;
-      --border: #2a2a2a;
-      --border-focus: #5a5af4;
-      --text: #f0f0f0;
-      --text-secondary: #6b6b6b;
-      --accent: #5a5af4;
-      --accent-hover: #6b6bf5;
+      --bg: #1a1a1a;
+      --surface: #242424;
+      --surface-2: #2c2c2c;
+      --border: #333;
+      --border-focus: #6366f1;
+      --text: #f5f5f5;
+      --text-2: #a0a0a0;
+      --text-3: #6b6b6b;
+      --accent: #6366f1;
+      --accent-hover: #7376f3;
       --success: #22c55e;
       --error: #ef4444;
       --warning: #f59e0b;
-      --radius: 6px;
+      --radius: 8px;
+      --radius-sm: 6px;
     }
 
+    html, body { height: 100%; }
+
     body {
-      font-family: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+      font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       background: var(--bg);
       color: var(--text);
       font-size: 13px;
       line-height: 1.5;
-      padding: 16px;
       display: flex;
       flex-direction: column;
-      gap: 12px;
-      min-height: 100vh;
+      overflow: hidden;
     }
 
+    /* ── Header ─────────────────────────────────── */
     .header {
       display: flex;
       align-items: center;
-      gap: 8px;
-      padding-bottom: 12px;
-      border-bottom: 1px solid var(--border);
+      gap: 9px;
+      padding: 14px 16px 0;
+      flex-shrink: 0;
     }
 
-    .logo { width: 24px; height: 24px; flex-shrink: 0; color: var(--accent); }
+    .logo {
+      width: 26px; height: 26px; flex-shrink: 0;
+      background: linear-gradient(135deg, var(--accent), #8b5cf6);
+      border-radius: var(--radius-sm);
+      display: flex; align-items: center; justify-content: center;
+      color: #fff;
+    }
+    .logo svg { width: 15px; height: 15px; }
 
     .header h1 {
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--text);
-      letter-spacing: -0.01em;
+      font-size: 13px; font-weight: 600; letter-spacing: -0.01em; flex: 1;
     }
 
-    .field { display: flex; flex-direction: column; gap: 5px; }
+    /* ── Tabs ───────────────────────────────────── */
+    .tabs {
+      display: flex;
+      padding: 12px 16px 0;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .tab {
+      padding: 7px 13px;
+      font-size: 12px; font-weight: 500;
+      color: var(--text-3);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
+      transition: color .15s, border-color .15s;
+      user-select: none;
+    }
+    .tab:hover { color: var(--text-2); }
+    .tab.active { color: var(--text); border-bottom-color: var(--accent); }
+
+    /* ── Panels (scrollable) ────────────────────── */
+    .panel {
+      display: none;
+      flex-direction: column;
+      gap: 13px;
+      padding: 15px 16px;
+      flex: 1 1 auto;
+      overflow-y: auto;
+      min-height: 0;
+    }
+    .panel.active { display: flex; }
+    .panel::-webkit-scrollbar { width: 8px; }
+    .panel::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+    /* ── Fields ─────────────────────────────────── */
+    .field { display: flex; flex-direction: column; gap: 6px; }
 
     .field label {
-      font-size: 11px;
-      font-weight: 500;
-      color: var(--text-secondary);
-      letter-spacing: 0.02em;
-      text-transform: uppercase;
+      font-size: 10px; font-weight: 600;
+      color: var(--text-3);
+      letter-spacing: .04em; text-transform: uppercase;
+      display: flex; align-items: center; justify-content: space-between;
     }
+    .field label a { color: var(--accent); text-decoration: none; font-size: 10px; text-transform: none; letter-spacing: 0; }
+    .field label a:hover { text-decoration: underline; }
 
-    input[type="url"], select {
+    input, select {
       width: 100%;
       background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: var(--radius);
+      border-radius: var(--radius-sm);
       color: var(--text);
-      font-size: 12px;
-      font-family: inherit;
+      font-size: 12px; font-family: inherit;
       outline: none;
-      transition: border-color 0.15s;
+      transition: border-color .15s, background .15s;
     }
-
-    input[type="url"] { padding: 8px 10px; direction: ltr; }
-    input[type="url"]::placeholder { color: #3a3a3a; }
-    input[type="url"]:focus, select:focus { border-color: var(--border-focus); }
+    input { padding: 9px 11px; }
+    input::placeholder { color: var(--text-3); }
+    input:focus, select:focus { border-color: var(--border-focus); background: var(--surface-2); }
+    input:disabled { opacity: .5; cursor: default; }
 
     select {
-      padding: 8px 28px 8px 10px;
+      padding: 9px 30px 9px 11px;
       cursor: pointer;
-      appearance: none;
-      -webkit-appearance: none;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='%234a4a4a' d='M5 6L0 0h10z'/%3E%3C/svg%3E");
+      appearance: none; -webkit-appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='%23888' d='M5 6 0 0h10z'/%3E%3C/svg%3E");
       background-repeat: no-repeat;
-      background-position: left 10px center;
+      background-position: right 11px center;
     }
 
-    .row { display: flex; gap: 8px; }
+    .row { display: flex; gap: 9px; }
     .row .field { flex: 1; }
 
-    button#capture {
+    /* ── Buttons ────────────────────────────────── */
+    button.primary {
       width: 100%;
-      padding: 9px 16px;
+      padding: 11px 16px;
       background: var(--accent);
-      border: none;
-      border-radius: var(--radius);
-      color: #fff;
-      font-size: 12px;
-      font-weight: 600;
-      font-family: inherit;
+      border: none; border-radius: var(--radius-sm);
+      color: #fff; font-size: 12.5px; font-weight: 600; font-family: inherit;
       cursor: pointer;
-      letter-spacing: 0.01em;
-      transition: background 0.15s, opacity 0.15s;
+      transition: background .15s, opacity .15s, transform .08s;
     }
+    button.primary:hover:not(:disabled) { background: var(--accent-hover); }
+    button.primary:active:not(:disabled) { transform: scale(.99); }
+    button.primary:disabled { opacity: .4; cursor: not-allowed; }
 
-    button#capture:hover:not(:disabled) { background: var(--accent-hover); }
-    button#capture:active:not(:disabled) { opacity: 0.85; }
-    button#capture:disabled { opacity: 0.35; cursor: not-allowed; }
+    button.secondary {
+      padding: 8px 13px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text-2);
+      font-size: 11px; font-family: inherit; font-weight: 500;
+      cursor: pointer; white-space: nowrap;
+      transition: border-color .15s, color .15s, background .15s;
+    }
+    button.secondary:hover { border-color: var(--accent); color: var(--text); }
+    button.danger { color: var(--error); }
+    button.danger:hover { border-color: var(--error); color: var(--error); background: rgba(239,68,68,.08); }
 
+    /* ── Status ─────────────────────────────────── */
     .status { display: none; font-size: 12px; }
-
     .status-inner {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 8px 10px;
-      border-radius: var(--radius);
+      display: flex; align-items: center; gap: 9px;
+      padding: 10px 12px; border-radius: var(--radius-sm);
     }
-
-    .status.loading .status-inner { color: #7aadff; background: rgba(90,90,244,0.08); border: 1px solid rgba(90,90,244,0.2); }
-    .status.success .status-inner { color: var(--success); background: rgba(34,197,94,0.07); border: 1px solid rgba(34,197,94,0.2); }
-    .status.error .status-inner   { color: var(--error);   background: rgba(239,68,68,0.07);  border: 1px solid rgba(239,68,68,0.2); }
+    .status.loading .status-inner { color: #a5b4fc; background: rgba(99,102,241,.1); border: 1px solid rgba(99,102,241,.25); }
+    .status.success .status-inner { color: var(--success); background: rgba(34,197,94,.08); border: 1px solid rgba(34,197,94,.25); }
+    .status.error   .status-inner { color: var(--error);   background: rgba(239,68,68,.08); border: 1px solid rgba(239,68,68,.25); }
     .status.loading, .status.success, .status.error { display: block; }
 
-    .dot {
-      width: 6px; height: 6px;
+    .spinner {
+      width: 13px; height: 13px; flex-shrink: 0;
+      border: 2px solid currentColor; border-right-color: transparent;
       border-radius: 50%;
-      flex-shrink: 0;
-      background: currentColor;
-      animation: pulse 1.2s ease-in-out infinite;
+      animation: spin .7s linear infinite;
     }
-    .status.success .dot, .status.error .dot { animation: none; }
-    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .status.success .icon, .status.error .icon { font-size: 13px; }
 
+    /* ── Hint / warning ─────────────────────────── */
+    .hint {
+      font-size: 11px; color: var(--text-3); line-height: 1.5;
+    }
+    .warn {
+      display: none;
+      font-size: 11.5px; color: var(--warning);
+      padding: 9px 11px;
+      background: rgba(245,158,11,.08);
+      border: 1px solid rgba(245,158,11,.25);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+    }
+    .warn.show { display: block; }
+    .warn b { font-weight: 600; }
+
+    /* ── Settings ───────────────────────────────── */
+    .group {
+      display: flex; flex-direction: column; gap: 12px;
+      padding: 13px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+    }
+    .group-title {
+      font-size: 10px; font-weight: 700;
+      color: var(--text-3);
+      text-transform: uppercase; letter-spacing: .06em;
+    }
+    .key-row { display: flex; gap: 7px; }
+    .key-row input { flex: 1; }
+    .key-status {
+      font-size: 10px; color: var(--success);
+      display: flex; align-items: center; gap: 4px;
+      min-height: 14px;
+    }
+    .pill {
+      display: inline-block;
+      font-size: 10px; padding: 1px 7px; border-radius: 20px;
+      background: var(--surface-2); color: var(--text-3);
+    }
+    .pill.free { background: rgba(34,197,94,.12); color: var(--success); }
+
+    /* ── Footer ─────────────────────────────────── */
     .footer {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding-top: 10px;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 9px 16px;
       border-top: 1px solid var(--border);
-      margin-top: auto;
+      flex-shrink: 0;
     }
-
-    .version { font-size: 11px; color: var(--text-secondary); }
-    .update-area { display: flex; align-items: center; gap: 8px; }
+    .version { font-size: 11px; color: var(--text-3); }
+    .update-area { display: flex; align-items: center; gap: 9px; }
     .update-msg { font-size: 11px; }
     .update-msg.ok  { color: var(--success); }
     .update-msg.new { color: var(--warning); }
     .update-msg.err { color: var(--error); }
-
-    button#checkUpdate {
-      padding: 4px 10px;
-      background: transparent;
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      color: var(--text-secondary);
-      font-size: 11px;
-      font-family: inherit;
-      cursor: pointer;
-      transition: border-color 0.15s, color 0.15s;
-      white-space: nowrap;
-    }
-    button#checkUpdate:hover:not(:disabled) { border-color: var(--accent); color: var(--text); }
-    button#checkUpdate:disabled { opacity: 0.4; cursor: not-allowed; }
+    #checkUpdate { padding: 5px 10px; font-size: 11px; }
   </style>
 </head>
 <body>
 
+  <!-- Header -->
   <div class="header">
-    <svg class="logo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-      <rect x="2" y="3" width="20" height="14" rx="2"/>
-      <path d="M8 21h8M12 17v4"/>
-      <circle cx="12" cy="10" r="3"/>
-    </svg>
+    <span class="logo">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/>
+      </svg>
+    </span>
     <h1>Website Screenshot</h1>
   </div>
 
-  <div class="field">
-    <label>URL</label>
-    <input type="url" id="url" placeholder="https://example.com" value="https://" spellcheck="false" />
+  <!-- Tabs -->
+  <div class="tabs">
+    <div class="tab active" data-tab="capture">Capture</div>
+    <div class="tab" data-tab="settings">Settings</div>
   </div>
 
-  <div class="row">
+  <!-- Capture panel -->
+  <div class="panel active" id="panel-capture">
     <div class="field">
-      <label>Viewport</label>
-      <select id="width">
-        <option value="1440">1440px — Desktop</option>
-        <option value="1920">1920px — Wide</option>
-        <option value="1280">1280px — Laptop</option>
-        <option value="768">768px — Tablet</option>
-        <option value="390">390px — Mobile</option>
+      <label>Website URL</label>
+      <input type="url" id="url" placeholder="https://example.com" spellcheck="false" autocomplete="off" />
+    </div>
+
+    <div class="row">
+      <div class="field">
+        <label>Viewport width</label>
+        <select id="width">
+          <option value="1440">1440 — Desktop</option>
+          <option value="1920">1920 — Wide</option>
+          <option value="1280">1280 — Laptop</option>
+          <option value="1024">1024 — Small</option>
+          <option value="768">768 — Tablet</option>
+          <option value="390">390 — Mobile</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Quality</label>
+        <select id="scale">
+          <option value="2">2× — Retina</option>
+          <option value="1">1× — Standard</option>
+          <option value="3">3× — Max</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Screenshot provider</label>
+      <select id="provider">
+        <option value="microlink">microlink.io — Free</option>
+        <option value="thum">thum.io — Free</option>
+        <option value="screenshotcore">ScreenshotCore — API key</option>
+        <option value="apiflash">ApiFlash — API key</option>
       </select>
     </div>
-    <div class="field">
-      <label>Scale</label>
-      <select id="quality">
-        <option value="2">2x</option>
-        <option value="1">1x</option>
-        <option value="3">3x</option>
-      </select>
+
+    <div class="warn" id="warn">
+      <b>No API key set.</b> Open <b>Settings</b> to add one, or pick a free provider.
     </div>
+
+    <button class="primary" id="capture">Capture full page</button>
+
+    <div class="status" id="status">
+      <div class="status-inner">
+        <span class="spinner" id="statusSpinner"></span>
+        <span class="icon" id="statusIcon" style="display:none"></span>
+        <span id="statusText"></span>
+      </div>
+    </div>
+
+    <p class="hint">Captures the entire page top to bottom. Tall pages are tiled automatically to preserve full quality.</p>
   </div>
 
-  <button id="capture">Capture full page</button>
-
-  <div class="status" id="status">
-    <div class="status-inner">
-      <span class="dot"></span>
-      <span id="statusText"></span>
+  <!-- Settings panel -->
+  <div class="panel" id="panel-settings">
+    <div class="group">
+      <span class="group-title">Free providers</span>
+      <div class="field">
+        <label>microlink.io <span class="pill free">No key</span></label>
+        <div class="hint">50 captures/day. Good general default.</div>
+      </div>
+      <div class="field">
+        <label>thum.io <span class="pill free">No key</span></label>
+        <div class="hint">Unlimited basic use. Reliable for full-page.</div>
+      </div>
     </div>
+
+    <div class="group">
+      <span class="group-title">API key providers</span>
+
+      <div class="field">
+        <label>ScreenshotCore <a href="https://screenshotcore.com/api-keys" target="_blank">get key ↗</a></label>
+        <div class="key-row">
+          <input type="password" id="key-screenshotcore" placeholder="Access key" spellcheck="false" autocomplete="off" />
+          <button class="secondary" data-save="screenshotcore">Save</button>
+        </div>
+        <div class="key-status" id="status-screenshotcore"></div>
+      </div>
+
+      <div class="field">
+        <label>ApiFlash <a href="https://apiflash.com" target="_blank">get key ↗</a></label>
+        <div class="key-row">
+          <input type="password" id="key-apiflash" placeholder="Access key" spellcheck="false" autocomplete="off" />
+          <button class="secondary" data-save="apiflash">Save</button>
+        </div>
+        <div class="key-status" id="status-apiflash"></div>
+        <div class="hint">Best for lazy-loaded sites (auto-scrolls the page).</div>
+      </div>
+    </div>
+
+    <button class="secondary danger" id="clearKeys" style="width:100%">Clear all saved keys</button>
   </div>
 
+  <!-- Footer -->
   <div class="footer">
-    <span class="version" id="versionLabel">v1.0.3</span>
+    <span class="version">v1.2.1</span>
     <div class="update-area">
       <span class="update-msg" id="updateMsg"></span>
-      <button id="checkUpdate">Check for updates</button>
+      <button class="secondary" id="checkUpdate">Check for updates</button>
     </div>
   </div>
 
   <script>
-    const CURRENT_VERSION = "1.0.3";
-    const CACHE_KEY = "ws_plugin_cache";
-    const APP_URL = "https://raw.githubusercontent.com/imiladco/claude/main/figma-screenshot-plugin/app.html";
+    "use strict";
 
-    // On startup: check if a newer version is cached in localStorage
-    (function applyCacheIfNewer() {
+    const CURRENT_VERSION = "1.2.2";
+    const CACHE_KEY = "ws_plugin_cache";
+    const GITHUB_API = "https://api.github.com/repos/imiladco/claude/contents/figma-screenshot-plugin/app.html";
+    const KEY_PROVIDERS = ["screenshotcore", "apiflash"];
+    const FIGMA_MAX = 4096;          // Max px per image dimension in Figma.
+    const TILE_BYTE_LIMIT = 4 * 1024 * 1024;
+    const enc = encodeURIComponent;
+
+    /* Surface any uncaught error so the UI is never silently dead. */
+    window.addEventListener("error", (e) => {
       try {
-        const raw = localStorage.getItem(CACHE_KEY);
+        const s = document.getElementById("status");
+        const t = document.getElementById("statusText");
+        if (s && t) {
+          s.className = "status error";
+          document.getElementById("statusSpinner").style.display = "none";
+          t.textContent = "Error: " + (e.message || "unknown");
+        }
+      } catch (_) {}
+    });
+
+    /* Crash-proof storage. Some Figma sandboxes block localStorage;
+       fall back to an in-memory store so nothing ever throws. */
+    const _mem = {};
+    const LS = {
+      get(k)    { try { return localStorage.getItem(k); } catch (_) { return k in _mem ? _mem[k] : null; } },
+      set(k, v) { try { localStorage.setItem(k, v); } catch (_) { _mem[k] = String(v); } },
+      remove(k) { try { localStorage.removeItem(k); } catch (_) { delete _mem[k]; } }
+    };
+
+    /* ── Self-update: apply a newer cached build if present ── */
+    function versionGT(a, b) {
+      const x = a.split(".").map(Number), y = b.split(".").map(Number);
+      for (let i = 0; i < 3; i++) {
+        if ((x[i] || 0) > (y[i] || 0)) return true;
+        if ((x[i] || 0) < (y[i] || 0)) return false;
+      }
+      return false;
+    }
+    (function applyCachedBuild() {
+      try {
+        const raw = LS.get(CACHE_KEY);
         if (!raw) return;
         const { version, html } = JSON.parse(raw);
-        if (version && version !== CURRENT_VERSION) {
-          document.open();
-          document.write(html);
-          document.close();
+        if (version && html && versionGT(version, CURRENT_VERSION)) {
+          document.open(); document.write(html); document.close();
         }
       } catch (_) {}
     })();
 
-    const btn        = document.getElementById("capture");
-    const urlInput   = document.getElementById("url");
-    const widthSel   = document.getElementById("width");
-    const qualitySel = document.getElementById("quality");
-    const statusEl   = document.getElementById("status");
-    const statusText = document.getElementById("statusText");
-    const updateBtn  = document.getElementById("checkUpdate");
-    const updateMsg  = document.getElementById("updateMsg");
+    /* ── Key storage ── */
+    const getKey = (p) => LS.get("ws_key_" + p) || "";
+    const setKey = (p, v) => v ? LS.set("ws_key_" + p, v) : LS.remove("ws_key_" + p);
 
-    const MAX_DIM   = 4096;
-    const MAX_BYTES = 3.5 * 1024 * 1024;
+    /* ── Element refs ── */
+    const $ = (id) => document.getElementById(id);
+    const btn = $("capture"), urlInput = $("url"), widthSel = $("width"),
+          scaleSel = $("scale"), providerSel = $("provider"), warn = $("warn"),
+          statusEl = $("status"), statusText = $("statusText"),
+          statusSpinner = $("statusSpinner"), statusIcon = $("statusIcon"),
+          updateBtn = $("checkUpdate"), updateMsg = $("updateMsg");
 
+    /* ── Tabs ── */
+    document.querySelectorAll(".tab").forEach((t) => {
+      t.addEventListener("click", () => activateTab(t.dataset.tab));
+    });
+    function activateTab(name) {
+      document.querySelectorAll(".tab").forEach((x) => x.classList.toggle("active", x.dataset.tab === name));
+      document.querySelectorAll(".panel").forEach((x) => x.classList.toggle("active", x.id === "panel-" + name));
+      if (name === "settings") loadKeysIntoSettings();
+    }
+
+    /* ── Settings: load / save keys ── */
+    function loadKeysIntoSettings() {
+      KEY_PROVIDERS.forEach((p) => {
+        const input = $("key-" + p);
+        if (input) input.value = getKey(p);
+        renderKeyStatus(p);
+      });
+    }
+    function renderKeyStatus(p) {
+      const el = $("status-" + p);
+      if (!el) return;
+      el.textContent = getKey(p) ? "✓ Saved" : "";
+    }
+    document.querySelectorAll("[data-save]").forEach((b) => {
+      b.addEventListener("click", () => {
+        const p = b.dataset.save;
+        setKey(p, $("key-" + p).value.trim());
+        renderKeyStatus(p);
+        b.textContent = "Saved ✓";
+        setTimeout(() => (b.textContent = "Save"), 1400);
+        refreshWarning();
+      });
+    });
+    $("clearKeys").addEventListener("click", () => {
+      KEY_PROVIDERS.forEach((p) => setKey(p, ""));
+      loadKeysIntoSettings();
+      refreshWarning();
+    });
+
+    /* ── Provider / warning state ── */
+    (function restore() {
+      try {
+        const sp = LS.get("ws_provider");
+        if (sp) providerSel.value = sp;
+        urlInput.value = LS.get("ws_last_url") || "https://";
+      } catch (_) { urlInput.value = "https://"; }
+    })();
+    providerSel.addEventListener("change", () => {
+      LS.set("ws_provider", providerSel.value);
+      refreshWarning();
+    });
+    function refreshWarning() {
+      const p = providerSel.value;
+      warn.classList.toggle("show", KEY_PROVIDERS.includes(p) && !getKey(p));
+    }
+    warn.addEventListener("click", () => activateTab("settings"));
+    refreshWarning();
+
+    /* ── Status helpers ── */
     function setStatus(type, msg) {
       statusEl.className = "status " + type;
       statusText.textContent = msg;
+      const loading = type === "loading";
+      statusSpinner.style.display = loading ? "" : "none";
+      statusIcon.style.display = loading ? "none" : "";
+      statusIcon.textContent = type === "success" ? "✓" : type === "error" ? "✕" : "";
     }
 
-    async function compressImage(blob, origW, origH) {
+    /* ── Screenshot providers → each returns a single Blob ── */
+    async function fetchBlob(url) {
+      const r = await fetch(url);
+      if (!r.ok) {
+        let detail = "";
+        try { detail = (await r.text()).slice(0, 140); } catch (_) {}
+        throw new Error(`HTTP ${r.status}${detail ? " — " + detail : ""}`);
+      }
+      const blob = await r.blob();
+      if (!blob.type.startsWith("image/")) {
+        // Some APIs return JSON errors with 200; surface them.
+        const txt = await blob.text().catch(() => "");
+        throw new Error(txt ? txt.slice(0, 140) : "Provider did not return an image.");
+      }
+      return blob;
+    }
+
+    const PROVIDERS = {
+      microlink: async (url, w, scale) => {
+        const api =
+          `https://api.microlink.io/?url=${enc(url)}&screenshot=true&meta=false` +
+          `&fullPage=true&type=png&viewport.width=${w}&viewport.deviceScaleFactor=${scale}` +
+          `&disableAnimations=true&waitForTimeout=3500`;
+        const r = await fetch(api);
+        if (!r.ok) throw new Error(`microlink HTTP ${r.status}`);
+        const j = await r.json();
+        if (j.status !== "success" || !j.data || !j.data.screenshot || !j.data.screenshot.url)
+          throw new Error((j.message || "microlink could not capture this URL."));
+        return fetchBlob(j.data.screenshot.url);
+      },
+      thum: (url, w) =>
+        fetchBlob(`https://image.thum.io/get/width/${w}/fullpage/noanimate/${url}`),
+      screenshotcore: (url, w, scale, key) => {
+        if (!key) throw new Error("ScreenshotCore API key required (Settings).");
+        return fetchBlob(
+          `https://screenshotcore.com/api/v1/screenshot?access_key=${enc(key)}&url=${enc(url)}` +
+          `&viewport_width=${w}&device_scale_factor=${scale}&full_page=true` +
+          `&format=png&block=ads,trackers&delay=3`
+        );
+      },
+      apiflash: (url, w, scale, key) => {
+        if (!key) throw new Error("ApiFlash API key required (Settings).");
+        return fetchBlob(
+          `https://api.apiflash.com/v1/urltoimage?access_key=${enc(key)}&url=${enc(url)}` +
+          `&width=${w}&full_page=true&format=png&scale_factor=${scale}` +
+          `&scroll_page=true&wait_until=network_idle&delay=3`
+        );
+      }
+    };
+
+    /* ── Tiling: split a tall screenshot into ≤4096px slices ── */
+    async function buildTiles(blob, onProgress) {
       const bmp = await createImageBitmap(blob);
-      let w = bmp.width || origW;
-      let h = bmp.height || origH;
+      const ow = bmp.width, oh = bmp.height;
 
-      if (w > MAX_DIM || h > MAX_DIM) {
-        const r = Math.min(MAX_DIM / w, MAX_DIM / h);
-        w = Math.round(w * r);
-        h = Math.round(h * r);
+      // Scale the whole image down if it is wider than Figma allows.
+      const scale = ow > FIGMA_MAX ? FIGMA_MAX / ow : 1;
+      const W = Math.round(ow * scale);
+      const H = Math.round(oh * scale);
+
+      const tileCount = Math.ceil(H / FIGMA_MAX);
+      const tiles = [];
+      let y = 0, idx = 0;
+
+      while (y < H) {
+        idx++;
+        if (onProgress) onProgress(idx, tileCount);
+        const th = Math.min(FIGMA_MAX, H - y);
+        const cv = new OffscreenCanvas(W, th);
+        const ctx = cv.getContext("2d");
+        // Source region in original-image coordinates.
+        ctx.drawImage(bmp, 0, y / scale, ow, th / scale, 0, 0, W, th);
+
+        let out = await cv.convertToBlob({ type: "image/png" });
+        if (out.size > TILE_BYTE_LIMIT) {
+          out = await cv.convertToBlob({ type: "image/jpeg", quality: 0.92 });
+        }
+        tiles.push({
+          data: Array.from(new Uint8Array(await out.arrayBuffer())),
+          width: W, height: th, y
+        });
+        y += th;
       }
-
-      const cv = new OffscreenCanvas(w, h);
-      cv.getContext("2d").drawImage(bmp, 0, 0, w, h);
-
-      for (const q of [0.92, 0.80, 0.65, 0.50]) {
-        const b = await cv.convertToBlob({ type: "image/jpeg", quality: q });
-        if (b.size <= MAX_BYTES)
-          return { data: new Uint8Array(await b.arrayBuffer()), width: w, height: h };
-      }
-
-      const over = await cv.convertToBlob({ type: "image/jpeg", quality: 0.5 });
-      const scale = Math.sqrt(MAX_BYTES / over.size);
-      const sw = Math.round(w * scale), sh = Math.round(h * scale);
-      const cv2 = new OffscreenCanvas(sw, sh);
-      cv2.getContext("2d").drawImage(bmp, 0, 0, sw, sh);
-      const fin = await cv2.convertToBlob({ type: "image/jpeg", quality: 0.7 });
-      return { data: new Uint8Array(await fin.arrayBuffer()), width: sw, height: sh };
+      bmp.close && bmp.close();
+      return { tiles, totalWidth: W, totalHeight: H };
     }
 
+    /* ── Normalize URL ── */
+    function normalizeUrl(raw) {
+      let u = raw.trim();
+      if (!u || u === "https://" || u === "http://") return "";
+      if (!/^https?:\/\//i.test(u)) u = "https://" + u;
+      try { new URL(u); } catch (_) { return ""; }
+      return u;
+    }
+
+    /* ── Capture flow ── */
     btn.addEventListener("click", async () => {
-      const url = urlInput.value.trim();
-      if (!url || url === "https://") {
-        setStatus("error", "Please enter a valid URL.");
+      const url = normalizeUrl(urlInput.value);
+      if (!url) { setStatus("error", "Please enter a valid URL."); return; }
+      urlInput.value = url;
+      LS.set("ws_last_url", url);
+
+      const provider = providerSel.value;
+      const key = getKey(provider);
+      if (KEY_PROVIDERS.includes(provider) && !key) {
+        setStatus("error", "API key missing — open Settings.");
+        activateTab("capture");
+        warn.classList.add("show");
         return;
       }
 
+      const w = parseInt(widthSel.value, 10);
+      const scale = parseInt(scaleSel.value, 10);
+      const label = providerSel.options[providerSel.selectedIndex].text.split(" —")[0];
+
       btn.disabled = true;
-      setStatus("loading", "Requesting screenshot…");
+      setStatus("loading", `Capturing via ${label}…`);
 
       try {
-        const apiUrl =
-          `https://api.microlink.io/?url=${encodeURIComponent(url)}` +
-          `&screenshot=true&meta=false&fullPage=true&type=png` +
-          `&viewport.width=${widthSel.value}` +
-          `&viewport.deviceScaleFactor=${qualitySel.value}` +
-          `&waitForTimeout=2500` +
-          `&disableAnimations=true`;
-
-        const apiRes = await fetch(apiUrl);
-        if (!apiRes.ok) throw new Error(`Server error ${apiRes.status}`);
-
-        const json = await apiRes.json();
-        if (json.status !== "success" || !json.data?.screenshot?.url)
-          throw new Error("Screenshot failed. Check the URL and try again.");
-
-        setStatus("loading", "Downloading image…");
-        const imgRes = await fetch(json.data.screenshot.url);
-        if (!imgRes.ok) throw new Error("Failed to download image.");
-
-        setStatus("loading", "Processing…");
-        const { data, width, height } = await compressImage(
-          await imgRes.blob(),
-          json.data.screenshot.width || parseInt(widthSel.value),
-          json.data.screenshot.height || 900
-        );
-
+        const blob = await PROVIDERS[provider](url, w, scale, key);
+        setStatus("loading", "Processing image…");
+        const { tiles, totalWidth, totalHeight } = await buildTiles(blob, (i, n) => {
+          if (n > 1) setStatus("loading", `Slicing tile ${i}/${n}…`);
+        });
         setStatus("loading", "Adding to canvas…");
-        parent.postMessage({
-          pluginMessage: { type: "add-image", imageData: Array.from(data), naturalWidth: width, naturalHeight: height, url }
-        }, "*");
-
+        parent.postMessage({ pluginMessage: {
+          type: "add-tiles", tiles, totalWidth, totalHeight, url
+        }}, "*");
       } catch (err) {
-        setStatus("error", err.message || "Unknown error.");
+        setStatus("error", (err && err.message) ? err.message : "Capture failed.");
         btn.disabled = false;
       }
     });
 
+    urlInput.addEventListener("keydown", (e) => { if (e.key === "Enter") btn.click(); });
+
+    /* ── Update check via GitHub API ── */
     updateBtn.addEventListener("click", async () => {
       updateBtn.disabled = true;
       updateMsg.className = "update-msg";
       updateMsg.textContent = "Checking…";
-
       try {
-        const res = await fetch(APP_URL + "?t=" + Date.now());
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-
-        const html = await res.text();
-        const match = html.match(/CURRENT_VERSION\s*=\s*["']([^"']+)["']/);
-        if (!match) throw new Error("Version not found");
-
-        const latest = match[1];
-
-        if (latest === CURRENT_VERSION) {
+        const r = await fetch(GITHUB_API + "?t=" + Date.now(), {
+          headers: { Accept: "application/vnd.github.v3+json" }
+        });
+        if (!r.ok) throw new Error("net");
+        const j = await r.json();
+        const html = decodeURIComponent(escape(atob((j.content || "").replace(/\n/g, ""))));
+        const m = html.match(/CURRENT_VERSION\s*=\s*["']([^"']+)["']/);
+        if (!m) throw new Error("parse");
+        const latest = m[1];
+        if (!versionGT(latest, CURRENT_VERSION)) {
           updateMsg.className = "update-msg ok";
           updateMsg.textContent = "Up to date";
           updateBtn.disabled = false;
           return;
         }
-
-        // Cache to localStorage so it persists after plugin is closed and reopened
-        localStorage.setItem(CACHE_KEY, JSON.stringify({ version: latest, html }));
-
+        LS.set(CACHE_KEY, JSON.stringify({ version: latest, html }));
         updateMsg.className = "update-msg new";
-        updateMsg.textContent = `v${latest} installed — reloading…`;
-
-        setTimeout(() => {
-          document.open();
-          document.write(html);
-          document.close();
-        }, 600);
-
-      } catch (err) {
+        updateMsg.textContent = `Updating to v${latest}…`;
+        setTimeout(() => { document.open(); document.write(html); document.close(); }, 700);
+      } catch (e) {
         updateMsg.className = "update-msg err";
-        updateMsg.textContent = "Connection failed";
+        updateMsg.textContent = "Update check failed";
         updateBtn.disabled = false;
       }
     });
 
+    /* ── Messages from the sandbox ── */
     window.onmessage = (e) => {
       const msg = e.data.pluginMessage;
       if (!msg) return;
@@ -381,7 +672,7 @@
         setStatus("success", "Screenshot added to canvas.");
         btn.disabled = false;
       } else if (msg.type === "error") {
-        setStatus("error", msg.message);
+        setStatus("error", msg.message || "Something went wrong.");
         btn.disabled = false;
       }
     };
