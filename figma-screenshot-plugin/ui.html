@@ -221,16 +221,26 @@
   </div>
 
   <script>
-    const CURRENT_VERSION = "1.0.5";
+    const CURRENT_VERSION = "1.0.6";
     const CACHE_KEY = "ws_plugin_cache";
     const API_URL = "https://api.github.com/repos/imiladco/claude/contents/figma-screenshot-plugin/app.html";
+
+    function versionGT(a, b) {
+      const pa = a.split(".").map(Number);
+      const pb = b.split(".").map(Number);
+      for (let i = 0; i < 3; i++) {
+        if ((pa[i]||0) > (pb[i]||0)) return true;
+        if ((pa[i]||0) < (pb[i]||0)) return false;
+      }
+      return false;
+    }
 
     (function applyCacheIfNewer() {
       try {
         const raw = localStorage.getItem(CACHE_KEY);
         if (!raw) return;
         const { version, html } = JSON.parse(raw);
-        if (version && version !== CURRENT_VERSION) {
+        if (version && versionGT(version, CURRENT_VERSION)) {
           document.open();
           document.write(html);
           document.close();
