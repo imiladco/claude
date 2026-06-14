@@ -291,7 +291,7 @@
       <select id="provider">
         <option value="microlink">microlink.io — Free</option>
         <option value="thum">thum.io — Free</option>
-        <option value="screenshotone">ScreenshotOne — API key</option>
+        <option value="screenshotcore">ScreenshotCore — API key</option>
         <option value="apiflash">ApiFlash — API key</option>
       </select>
     </div>
@@ -331,12 +331,12 @@
       <span class="group-title">API key providers</span>
 
       <div class="field">
-        <label>ScreenshotOne <a href="https://screenshotone.com" target="_blank">get key ↗</a></label>
+        <label>ScreenshotCore <a href="https://screenshotcore.com/api-keys" target="_blank">get key ↗</a></label>
         <div class="key-row">
-          <input type="password" id="key-screenshotone" placeholder="Access key" spellcheck="false" autocomplete="off" />
-          <button class="secondary" data-save="screenshotone">Save</button>
+          <input type="password" id="key-screenshotcore" placeholder="Access key" spellcheck="false" autocomplete="off" />
+          <button class="secondary" data-save="screenshotcore">Save</button>
         </div>
-        <div class="key-status" id="status-screenshotone"></div>
+        <div class="key-status" id="status-screenshotcore"></div>
       </div>
 
       <div class="field">
@@ -365,10 +365,10 @@
   <script>
     "use strict";
 
-    const CURRENT_VERSION = "1.2.1";
+    const CURRENT_VERSION = "1.2.2";
     const CACHE_KEY = "ws_plugin_cache";
     const GITHUB_API = "https://api.github.com/repos/imiladco/claude/contents/figma-screenshot-plugin/app.html";
-    const KEY_PROVIDERS = ["screenshotone", "apiflash"];
+    const KEY_PROVIDERS = ["screenshotcore", "apiflash"];
     const FIGMA_MAX = 4096;          // Max px per image dimension in Figma.
     const TILE_BYTE_LIMIT = 4 * 1024 * 1024;
     const enc = encodeURIComponent;
@@ -527,12 +527,12 @@
       },
       thum: (url, w) =>
         fetchBlob(`https://image.thum.io/get/width/${w}/fullpage/noanimate/${url}`),
-      screenshotone: (url, w, scale, key) => {
-        if (!key) throw new Error("ScreenshotOne API key required (Settings).");
+      screenshotcore: (url, w, scale, key) => {
+        if (!key) throw new Error("ScreenshotCore API key required (Settings).");
         return fetchBlob(
-          `https://api.screenshotone.com/take?access_key=${enc(key)}&url=${enc(url)}` +
+          `https://screenshotcore.com/api/v1/screenshot?access_key=${enc(key)}&url=${enc(url)}` +
           `&viewport_width=${w}&device_scale_factor=${scale}&full_page=true` +
-          `&format=png&block_cookie_banners=true&block_ads=true&delay=3`
+          `&format=png&block=ads,trackers&delay=3`
         );
       },
       apiflash: (url, w, scale, key) => {
