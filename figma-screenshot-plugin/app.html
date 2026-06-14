@@ -243,13 +243,53 @@
   <p class="tip">پلاگین از microlink.io برای گرفتن اسکرین‌شات استفاده می‌کنه</p>
 
   <script>
-    const CURRENT_VERSION = "1.0.0";
+    const CURRENT_VERSION = "1.0.1";
 
     const btn = document.getElementById("capture");
     const urlInput = document.getElementById("url");
     const widthSel = document.getElementById("width");
     const qualitySel = document.getElementById("quality");
     const statusEl = document.getElementById("status");
+
+    const MAX_DIMENSION = 4096;
+    const MAX_BYTES = 3.5 * 1024 * 1024; // 3.5 MB safe limit for Figma
+
+    async function compressImage(blob, origWidth, origHeight) {
+      const bitmap = await createImageBitmap(blob);
+      let w = bitmap.width || origWidth;
+      let h = bitmap.height || origHeight;
+
+      // Scale down if exceeds max dimension
+      if (w > MAX_DIMENSION || h > MAX_DIMENSION) {
+        const ratio = Math.min(MAX_DIMENSION / w, MAX_DIMENSION / h);
+        w = Math.round(w * ratio);
+        h = Math.round(h * ratio);
+      }
+
+      const canvas = new OffscreenCanvas(w, h);
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(bitmap, 0, 0, w, h);
+
+      // Try JPEG at decreasing quality until under size limit
+      const qualities = [0.92, 0.80, 0.65, 0.50];
+      for (const q of qualities) {
+        const outBlob = await canvas.convertToBlob({ type: "image/jpeg", quality: q });
+        if (outBlob.size <= MAX_BYTES) {
+          const buf = await outBlob.arrayBuffer();
+          return { data: new Uint8Array(buf), width: w, height: h };
+        }
+      }
+
+      // Last resort: scale image down further
+      const scale = Math.sqrt(MAX_BYTES / (await canvas.convertToBlob({ type: "image/jpeg", quality: 0.5 }).then(b => b.size)));
+      const sw = Math.round(w * scale);
+      const sh = Math.round(h * scale);
+      const canvas2 = new OffscreenCanvas(sw, sh);
+      canvas2.getContext("2d").drawImage(bitmap, 0, 0, sw, sh);
+      const finalBlob = await canvas2.convertToBlob({ type: "image/jpeg", quality: 0.7 });
+      const buf = await finalBlob.arrayBuffer();
+      return { data: new Uint8Array(buf), width: sw, height: sh };
+    }
 
     function setStatus(type, message) {
       statusEl.className = "status " + type;
@@ -298,7 +338,12 @@
         const imgRes = await fetch(screenshotUrl);
         if (!imgRes.ok) throw new Error("خطا در دانلود تصویر");
 
-        const arrayBuffer = await imgRes.arrayBuffer();
+        const blob = await imgRes.blob();
+
+        setStatus("loading", "در حال پردازش تصویر...");
+
+        const { data: imageData, width: finalWidth, height: finalHeight } =
+          await compressImage(blob, naturalWidth, naturalHeight);
 
         setStatus("loading", "در حال افزودن به فیگما...");
 
@@ -306,9 +351,9 @@
           {
             pluginMessage: {
               type: "add-image",
-              imageData: Array.from(new Uint8Array(arrayBuffer)),
-              naturalWidth,
-              naturalHeight,
+              imageData: Array.from(imageData),
+              naturalWidth: finalWidth,
+              naturalHeight: finalHeight,
               url,
             },
           },
