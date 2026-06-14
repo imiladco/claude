@@ -12,6 +12,7 @@
       --border: #2a2a2a;
       --border-focus: #5a5af4;
       --text: #f0f0f0;
+      --text-muted: #888;
       --text-secondary: #6b6b6b;
       --accent: #5a5af4;
       --accent-hover: #6b6bf5;
@@ -27,30 +28,58 @@
       color: var(--text);
       font-size: 13px;
       line-height: 1.5;
-      padding: 16px;
       display: flex;
       flex-direction: column;
-      gap: 12px;
       min-height: 100vh;
+      overflow: hidden;
     }
 
+    /* Header */
     .header {
       display: flex;
       align-items: center;
       gap: 8px;
-      padding-bottom: 12px;
-      border-bottom: 1px solid var(--border);
+      padding: 14px 16px 0;
     }
 
-    .logo { width: 24px; height: 24px; flex-shrink: 0; color: var(--accent); }
+    .logo { width: 20px; height: 20px; flex-shrink: 0; color: var(--accent); }
 
     .header h1 {
-      font-size: 13px;
+      font-size: 12px;
       font-weight: 600;
       color: var(--text);
       letter-spacing: -0.01em;
+      flex: 1;
     }
 
+    /* Tabs */
+    .tabs {
+      display: flex;
+      gap: 0;
+      padding: 10px 16px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .tab {
+      padding: 6px 12px;
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
+      transition: color 0.15s, border-color 0.15s;
+      user-select: none;
+    }
+
+    .tab:hover { color: var(--text); }
+    .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+    /* Panels */
+    .panel { display: none; flex-direction: column; gap: 12px; padding: 14px 16px; flex: 1; }
+    .panel.active { display: flex; }
+
+    /* Fields */
     .field { display: flex; flex-direction: column; gap: 5px; }
 
     .field label {
@@ -61,7 +90,7 @@
       text-transform: uppercase;
     }
 
-    input[type="url"], select {
+    input, select {
       width: 100%;
       background: var(--surface);
       border: 1px solid var(--border);
@@ -73,9 +102,9 @@
       transition: border-color 0.15s;
     }
 
-    input[type="url"] { padding: 8px 10px; direction: ltr; }
-    input[type="url"]::placeholder { color: #3a3a3a; }
-    input[type="url"]:focus, select:focus { border-color: var(--border-focus); }
+    input { padding: 8px 10px; direction: ltr; }
+    input::placeholder { color: #3a3a3a; }
+    input:focus, select:focus { border-color: var(--border-focus); }
 
     select {
       padding: 8px 28px 8px 10px;
@@ -90,7 +119,8 @@
     .row { display: flex; gap: 8px; }
     .row .field { flex: 1; }
 
-    button#capture {
+    /* Buttons */
+    button.primary {
       width: 100%;
       padding: 9px 16px;
       background: var(--accent);
@@ -101,14 +131,28 @@
       font-weight: 600;
       font-family: inherit;
       cursor: pointer;
-      letter-spacing: 0.01em;
       transition: background 0.15s, opacity 0.15s;
     }
 
-    button#capture:hover:not(:disabled) { background: var(--accent-hover); }
-    button#capture:active:not(:disabled) { opacity: 0.85; }
-    button#capture:disabled { opacity: 0.35; cursor: not-allowed; }
+    button.primary:hover:not(:disabled) { background: var(--accent-hover); }
+    button.primary:active:not(:disabled) { opacity: 0.85; }
+    button.primary:disabled { opacity: 0.35; cursor: not-allowed; }
 
+    button.secondary {
+      padding: 7px 12px;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text-secondary);
+      font-size: 11px;
+      font-family: inherit;
+      cursor: pointer;
+      transition: border-color 0.15s, color 0.15s;
+    }
+
+    button.secondary:hover { border-color: var(--accent); color: var(--text); }
+
+    /* Status */
     .status { display: none; font-size: 12px; }
 
     .status-inner {
@@ -126,19 +170,68 @@
 
     .dot {
       width: 6px; height: 6px;
-      border-radius: 50%;
-      flex-shrink: 0;
+      border-radius: 50%; flex-shrink: 0;
       background: currentColor;
       animation: pulse 1.2s ease-in-out infinite;
     }
     .status.success .dot, .status.error .dot { animation: none; }
     @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
 
+    /* No-key warning */
+    .key-warning {
+      display: none;
+      font-size: 11px;
+      color: var(--warning);
+      padding: 7px 10px;
+      background: rgba(245,158,11,0.07);
+      border: 1px solid rgba(245,158,11,0.2);
+      border-radius: var(--radius);
+      cursor: pointer;
+    }
+    .key-warning.visible { display: block; }
+
+    /* Settings panel */
+    .settings-group {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      padding: 12px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+    }
+
+    .settings-group-title {
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .key-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .key-row input { flex: 1; }
+
+    .key-saved {
+      font-size: 10px;
+      color: var(--success);
+      white-space: nowrap;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .key-saved.show { opacity: 1; }
+
+    /* Footer */
     .footer {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding-top: 10px;
+      padding: 10px 16px;
       border-top: 1px solid var(--border);
       margin-top: auto;
     }
@@ -160,10 +253,11 @@
       font-family: inherit;
       cursor: pointer;
       transition: border-color 0.15s, color 0.15s;
-      white-space: nowrap;
     }
     button#checkUpdate:hover:not(:disabled) { border-color: var(--accent); color: var(--text); }
     button#checkUpdate:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .divider { height: 1px; background: var(--border); }
   </style>
 </head>
 <body>
@@ -177,58 +271,112 @@
     <h1>Website Screenshot</h1>
   </div>
 
-  <div class="field">
-    <label>URL</label>
-    <input type="url" id="url" placeholder="https://example.com" value="https://" spellcheck="false" />
+  <div class="tabs">
+    <div class="tab active" data-tab="capture">Capture</div>
+    <div class="tab" data-tab="settings">Settings</div>
   </div>
 
-  <div class="row">
+  <!-- Capture Panel -->
+  <div class="panel active" id="panel-capture">
     <div class="field">
-      <label>Viewport</label>
-      <select id="width">
-        <option value="1440">1440px — Desktop</option>
-        <option value="1920">1920px — Wide</option>
-        <option value="1280">1280px — Laptop</option>
-        <option value="768">768px — Tablet</option>
-        <option value="390">390px — Mobile</option>
+      <label>URL</label>
+      <input type="url" id="url" placeholder="https://example.com" value="https://" spellcheck="false" />
+    </div>
+
+    <div class="row">
+      <div class="field">
+        <label>Viewport</label>
+        <select id="width">
+          <option value="1440">1440px — Desktop</option>
+          <option value="1920">1920px — Wide</option>
+          <option value="1280">1280px — Laptop</option>
+          <option value="768">768px — Tablet</option>
+          <option value="390">390px — Mobile</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Scale</label>
+        <select id="quality">
+          <option value="2">2x</option>
+          <option value="1">1x</option>
+          <option value="3">3x</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Provider</label>
+      <select id="provider">
+        <option value="microlink">microlink.io — Free</option>
+        <option value="thum">thum.io — Free</option>
+        <option value="screenshotone">ScreenshotOne</option>
+        <option value="apiflash">ApiFlash</option>
       </select>
     </div>
-    <div class="field">
-      <label>Scale</label>
-      <select id="quality">
-        <option value="2">2x</option>
-        <option value="1">1x</option>
-        <option value="3">3x</option>
-      </select>
+
+    <div class="key-warning" id="keyWarning">
+      No API key set — go to Settings to add one.
+    </div>
+
+    <button class="primary" id="capture">Capture full page</button>
+
+    <div class="status" id="status">
+      <div class="status-inner">
+        <span class="dot"></span>
+        <span id="statusText"></span>
+      </div>
     </div>
   </div>
 
-  <div class="field">
-    <label>Provider</label>
-    <select id="provider">
-      <option value="microlink">microlink.io — Free, no key</option>
-      <option value="thum">thum.io — Free, no key</option>
-      <option value="screenshotone">ScreenshotOne — API key required</option>
-      <option value="apiflash">ApiFlash — API key required</option>
-    </select>
-  </div>
+  <!-- Settings Panel -->
+  <div class="panel" id="panel-settings">
 
-  <div class="field" id="keyField" style="display:none">
-    <label>API Key</label>
-    <input type="text" id="apiKey" placeholder="Paste your API key here" spellcheck="false" style="padding:8px 10px;direction:ltr" />
-  </div>
+    <div class="settings-group">
+      <div class="settings-group-title">Free providers</div>
 
-  <button id="capture">Capture full page</button>
+      <div class="field">
+        <label>microlink.io</label>
+        <input type="text" value="No key required" disabled style="color:var(--text-secondary);opacity:0.5" />
+      </div>
 
-  <div class="status" id="status">
-    <div class="status-inner">
-      <span class="dot"></span>
-      <span id="statusText"></span>
+      <div class="field">
+        <label>thum.io</label>
+        <input type="text" value="No key required" disabled style="color:var(--text-secondary);opacity:0.5" />
+      </div>
     </div>
+
+    <div class="settings-group">
+      <div class="settings-group-title">API key providers</div>
+
+      <div class="field">
+        <label>ScreenshotOne — <a href="https://screenshotone.com" style="color:var(--accent);text-decoration:none;font-size:10px">get key</a></label>
+        <div class="key-row">
+          <input type="password" id="key-screenshotone" placeholder="sk_…" />
+          <button class="secondary" data-save="screenshotone">Save</button>
+          <span class="key-saved" id="saved-screenshotone">Saved ✓</span>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>ApiFlash — <a href="https://apiflash.com" style="color:var(--accent);text-decoration:none;font-size:10px">get key</a></label>
+        <div class="key-row">
+          <input type="password" id="key-apiflash" placeholder="Access key…" />
+          <button class="secondary" data-save="apiflash">Save</button>
+          <span class="key-saved" id="saved-apiflash">Saved ✓</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <button class="secondary" id="clearKeys" style="width:100%;color:var(--error);border-color:rgba(239,68,68,0.3)">
+      Clear all saved keys
+    </button>
   </div>
 
+  <!-- Footer (always visible) -->
   <div class="footer">
-    <span class="version">v1.0.8</span>
+    <span class="version">v1.0.9</span>
     <div class="update-area">
       <span class="update-msg" id="updateMsg"></span>
       <button id="checkUpdate">Check for updates</button>
@@ -236,9 +384,10 @@
   </div>
 
   <script>
-    const CURRENT_VERSION = "1.0.8";
+    const CURRENT_VERSION = "1.0.9";
     const CACHE_KEY = "ws_plugin_cache";
     const API_URL = "https://api.github.com/repos/imiladco/claude/contents/figma-screenshot-plugin/app.html";
+    const KEY_PROVIDERS = ["screenshotone", "apiflash"];
 
     function versionGT(a, b) {
       const pa = a.split(".").map(Number);
@@ -256,47 +405,89 @@
         if (!raw) return;
         const { version, html } = JSON.parse(raw);
         if (version && versionGT(version, CURRENT_VERSION)) {
-          document.open();
-          document.write(html);
-          document.close();
+          document.open(); document.write(html); document.close();
         }
       } catch (_) {}
     })();
 
-    const btn          = document.getElementById("capture");
-    const urlInput     = document.getElementById("url");
-    const widthSel     = document.getElementById("width");
-    const qualitySel   = document.getElementById("quality");
-    const providerSel  = document.getElementById("provider");
-    const keyField     = document.getElementById("keyField");
-    const apiKeyInput  = document.getElementById("apiKey");
-    const statusEl     = document.getElementById("status");
-    const statusText   = document.getElementById("statusText");
-    const updateBtn    = document.getElementById("checkUpdate");
-    const updateMsg    = document.getElementById("updateMsg");
+    // ── Key helpers ──────────────────────────────────────
+    function getKey(p) { return localStorage.getItem("ws_key_" + p) || ""; }
+    function setKey(p, v) { if (v) localStorage.setItem("ws_key_" + p, v); else localStorage.removeItem("ws_key_" + p); }
 
-    const KEY_PROVIDERS = ["screenshotone", "apiflash"];
-
-    function loadSavedKey(provider) {
-      return localStorage.getItem("ws_key_" + provider) || "";
-    }
-
-    function saveKey(provider, key) {
-      if (key) localStorage.setItem("ws_key_" + provider, key);
-    }
-
-    providerSel.addEventListener("change", () => {
-      const needsKey = KEY_PROVIDERS.includes(providerSel.value);
-      keyField.style.display = needsKey ? "flex" : "none";
-      if (needsKey) apiKeyInput.value = loadSavedKey(providerSel.value);
+    // ── Tab switching ────────────────────────────────────
+    document.querySelectorAll(".tab").forEach(t => {
+      t.addEventListener("click", () => {
+        document.querySelectorAll(".tab").forEach(x => x.classList.remove("active"));
+        document.querySelectorAll(".panel").forEach(x => x.classList.remove("active"));
+        t.classList.add("active");
+        document.getElementById("panel-" + t.dataset.tab).classList.add("active");
+        if (t.dataset.tab === "settings") loadSettingsKeys();
+      });
     });
 
-    // Restore last used provider
-    const savedProvider = localStorage.getItem("ws_provider");
-    if (savedProvider) {
-      providerSel.value = savedProvider;
-      providerSel.dispatchEvent(new Event("change"));
+    function loadSettingsKeys() {
+      KEY_PROVIDERS.forEach(p => {
+        const el = document.getElementById("key-" + p);
+        if (el) el.value = getKey(p);
+      });
     }
+
+    // ── Save key buttons ─────────────────────────────────
+    document.querySelectorAll("[data-save]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const p = btn.dataset.save;
+        const val = document.getElementById("key-" + p).value.trim();
+        setKey(p, val);
+        const badge = document.getElementById("saved-" + p);
+        badge.classList.add("show");
+        setTimeout(() => badge.classList.remove("show"), 2000);
+        updateKeyWarning();
+      });
+    });
+
+    // ── Clear all keys ───────────────────────────────────
+    document.getElementById("clearKeys").addEventListener("click", () => {
+      KEY_PROVIDERS.forEach(p => setKey(p, ""));
+      loadSettingsKeys();
+      updateKeyWarning();
+    });
+
+    // ── Capture panel ────────────────────────────────────
+    const btn         = document.getElementById("capture");
+    const urlInput    = document.getElementById("url");
+    const widthSel    = document.getElementById("width");
+    const qualitySel  = document.getElementById("quality");
+    const providerSel = document.getElementById("provider");
+    const keyWarning  = document.getElementById("keyWarning");
+    const statusEl    = document.getElementById("status");
+    const statusText  = document.getElementById("statusText");
+    const updateBtn   = document.getElementById("checkUpdate");
+    const updateMsg   = document.getElementById("updateMsg");
+
+    // Restore last provider
+    const savedProvider = localStorage.getItem("ws_provider");
+    if (savedProvider) providerSel.value = savedProvider;
+
+    function updateKeyWarning() {
+      const p = providerSel.value;
+      const needsKey = KEY_PROVIDERS.includes(p);
+      keyWarning.classList.toggle("visible", needsKey && !getKey(p));
+    }
+
+    keyWarning.addEventListener("click", () => {
+      document.querySelectorAll(".tab").forEach(x => x.classList.remove("active"));
+      document.querySelectorAll(".panel").forEach(x => x.classList.remove("active"));
+      document.querySelector('[data-tab="settings"]').classList.add("active");
+      document.getElementById("panel-settings").classList.add("active");
+      loadSettingsKeys();
+    });
+
+    providerSel.addEventListener("change", () => {
+      localStorage.setItem("ws_provider", providerSel.value);
+      updateKeyWarning();
+    });
+
+    updateKeyWarning();
 
     const MAX_DIM   = 4096;
     const MAX_BYTES = 3.5 * 1024 * 1024;
@@ -309,13 +500,11 @@
 
     async function compressImage(blob, origW, origH) {
       const bmp = await createImageBitmap(blob);
-      let w = bmp.width || origW;
-      let h = bmp.height || origH;
+      let w = bmp.width || origW, h = bmp.height || origH;
 
       if (w > MAX_DIM || h > MAX_DIM) {
         const r = Math.min(MAX_DIM / w, MAX_DIM / h);
-        w = Math.round(w * r);
-        h = Math.round(h * r);
+        w = Math.round(w * r); h = Math.round(h * r);
       }
 
       const cv = new OffscreenCanvas(w, h);
@@ -336,53 +525,47 @@
       return { data: new Uint8Array(await fin.arrayBuffer()), width: sw, height: sh };
     }
 
-    async function fetchImageBlob(imgUrl) {
-      const r = await fetch(imgUrl);
-      if (!r.ok) throw new Error(`Image download failed: ${r.status}`);
+    async function fetchBlob(url) {
+      const r = await fetch(url);
+      if (!r.ok) throw new Error(`Download failed: ${r.status}`);
       return r.blob();
     }
 
     const PROVIDERS = {
       microlink: async (url, w, scale) => {
-        const apiUrl =
-          `https://api.microlink.io/?url=${enc(url)}` +
-          `&screenshot=true&meta=false&fullPage=true&type=png` +
-          `&viewport.width=${w}&viewport.deviceScaleFactor=${scale}` +
-          `&disableAnimations=true&waitForTimeout=4000`;
-        const r = await fetch(apiUrl);
-        if (!r.ok) throw new Error(`microlink error ${r.status}`);
+        const r = await fetch(
+          `https://api.microlink.io/?url=${enc(url)}&screenshot=true&meta=false&fullPage=true&type=png` +
+          `&viewport.width=${w}&viewport.deviceScaleFactor=${scale}&disableAnimations=true&waitForTimeout=4000`
+        );
+        if (!r.ok) throw new Error(`microlink: ${r.status}`);
         const j = await r.json();
-        if (j.status !== "success" || !j.data?.screenshot?.url)
-          throw new Error("microlink: screenshot unavailable");
-        const blob = await fetchImageBlob(j.data.screenshot.url);
+        if (j.status !== "success" || !j.data?.screenshot?.url) throw new Error("microlink: no screenshot");
+        const blob = await fetchBlob(j.data.screenshot.url);
         return { blob, width: j.data.screenshot.width || w, height: j.data.screenshot.height || 900 };
       },
 
       thum: async (url, w) => {
-        const imgUrl = `https://image.thum.io/get/width/${w}/fullpage/${enc(url)}`;
-        const blob = await fetchImageBlob(imgUrl);
+        const blob = await fetchBlob(`https://image.thum.io/get/width/${w}/fullpage/${enc(url)}`);
         const bmp = await createImageBitmap(blob);
         return { blob, width: bmp.width, height: bmp.height };
       },
 
       screenshotone: async (url, w, scale, key) => {
-        if (!key) throw new Error("API key required for ScreenshotOne");
-        const imgUrl =
+        const blob = await fetchBlob(
           `https://api.screenshotone.com/take?access_key=${key}` +
           `&url=${enc(url)}&viewport_width=${w}&device_scale_factor=${scale}` +
-          `&full_page=true&format=jpg&image_quality=90&delay=3`;
-        const blob = await fetchImageBlob(imgUrl);
+          `&full_page=true&format=jpg&image_quality=90&delay=3`
+        );
         const bmp = await createImageBitmap(blob);
         return { blob, width: bmp.width, height: bmp.height };
       },
 
       apiflash: async (url, w, scale, key) => {
-        if (!key) throw new Error("API key required for ApiFlash");
-        const imgUrl =
+        const blob = await fetchBlob(
           `https://api.apiflash.com/v1/urltoimage?access_key=${key}` +
           `&url=${enc(url)}&width=${w}&full_page=true&format=jpeg&quality=90` +
-          `&scale_factor=${scale}&wait=3000&scroll_page=true`;
-        const blob = await fetchImageBlob(imgUrl);
+          `&scale_factor=${scale}&wait=3000&scroll_page=true`
+        );
         const bmp = await createImageBitmap(blob);
         return { blob, width: bmp.width, height: bmp.height };
       }
@@ -390,75 +573,55 @@
 
     btn.addEventListener("click", async () => {
       const url = urlInput.value.trim();
-      if (!url || url === "https://") {
-        setStatus("error", "Please enter a valid URL.");
+      if (!url || url === "https://") { setStatus("error", "Please enter a valid URL."); return; }
+
+      const provider = providerSel.value;
+      const apiKey   = getKey(provider);
+
+      if (KEY_PROVIDERS.includes(provider) && !apiKey) {
+        setStatus("error", "API key missing — go to Settings.");
         return;
       }
 
-      const provider = providerSel.value;
-      const apiKey   = apiKeyInput.value.trim();
-      const w        = parseInt(widthSel.value);
-      const scale    = parseInt(qualitySel.value);
-
-      localStorage.setItem("ws_provider", provider);
-      saveKey(provider, apiKey);
-
       btn.disabled = true;
-      setStatus("loading", `Requesting screenshot via ${providerSel.options[providerSel.selectedIndex].text.split(" —")[0]}…`);
+      const name = providerSel.options[providerSel.selectedIndex].text.split(" —")[0];
+      setStatus("loading", `Requesting via ${name}…`);
 
       try {
-        const { blob, width, height } = await PROVIDERS[provider](url, w, scale, apiKey);
-
+        const { blob, width, height } = await PROVIDERS[provider](url, parseInt(widthSel.value), parseInt(qualitySel.value), apiKey);
         setStatus("loading", "Processing…");
         const { data, width: fw, height: fh } = await compressImage(blob, width, height);
-
         setStatus("loading", "Adding to canvas…");
-        parent.postMessage({
-          pluginMessage: { type: "add-image", imageData: Array.from(data), naturalWidth: fw, naturalHeight: fh, url }
-        }, "*");
-
+        parent.postMessage({ pluginMessage: { type: "add-image", imageData: Array.from(data), naturalWidth: fw, naturalHeight: fh, url } }, "*");
       } catch (err) {
         setStatus("error", err.message || "Unknown error.");
         btn.disabled = false;
       }
     });
 
+    // ── Update check ─────────────────────────────────────
     updateBtn.addEventListener("click", async () => {
       updateBtn.disabled = true;
       updateMsg.className = "update-msg";
       updateMsg.textContent = "Checking…";
-
       try {
-        const res = await fetch(API_URL + "?t=" + Date.now(), {
-          headers: { Accept: "application/vnd.github.v3+json" }
-        });
+        const res = await fetch(API_URL + "?t=" + Date.now(), { headers: { Accept: "application/vnd.github.v3+json" } });
         if (!res.ok) throw new Error(`GitHub API: ${res.status}`);
-
         const json = await res.json();
         const html = atob(json.content.replace(/\n/g, ""));
         const match = html.match(/CURRENT_VERSION\s*=\s*["']([^"']+)["']/);
         if (!match) throw new Error("Version not found");
-
         const latest = match[1];
-
-        if (latest === CURRENT_VERSION) {
+        if (!versionGT(latest, CURRENT_VERSION)) {
           updateMsg.className = "update-msg ok";
           updateMsg.textContent = "Up to date";
           updateBtn.disabled = false;
           return;
         }
-
-        localStorage.setItem(CACHE_KEY, JSON.stringify({ version: latest, html }));
-
+        try { localStorage.setItem(CACHE_KEY, JSON.stringify({ version: latest, html })); } catch(_) {}
         updateMsg.className = "update-msg new";
-        updateMsg.textContent = `v${latest} installed — reloading…`;
-
-        setTimeout(() => {
-          document.open();
-          document.write(html);
-          document.close();
-        }, 600);
-
+        updateMsg.textContent = `v${latest} installing…`;
+        setTimeout(() => { document.open(); document.write(html); document.close(); }, 600);
       } catch (err) {
         updateMsg.className = "update-msg err";
         updateMsg.textContent = "Connection failed";
@@ -469,13 +632,8 @@
     window.onmessage = (e) => {
       const msg = e.data.pluginMessage;
       if (!msg) return;
-      if (msg.type === "done") {
-        setStatus("success", "Screenshot added to canvas.");
-        btn.disabled = false;
-      } else if (msg.type === "error") {
-        setStatus("error", msg.message);
-        btn.disabled = false;
-      }
+      if (msg.type === "done") { setStatus("success", "Screenshot added to canvas."); btn.disabled = false; }
+      else if (msg.type === "error") { setStatus("error", msg.message); btn.disabled = false; }
     };
   </script>
 </body>
