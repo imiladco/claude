@@ -373,10 +373,10 @@ app.get("/crawl", auth, async (req, res) => {
     try {
       const page = await ctx.newPage();
 
-      // Block heavy resources — only need HTML/CSS/JS for link extraction
+      // Block only heavy media — keep CSS so innerText works correctly
       await page.route("**/*", route => {
         const t = route.request().resourceType();
-        if (["image", "media", "font", "stylesheet"].includes(t) ||
+        if (["image", "media", "font"].includes(t) ||
             BLOCKED.some(r => r.test(route.request().url())))
           return route.abort();
         return route.continue();
@@ -416,8 +416,22 @@ app.get("/crawl", auth, async (req, res) => {
             const baseClean = (base.origin + base.pathname).replace(/\/$/, "") || base.origin;
             if (clean === baseClean) return;
             seen.add(clean);
-            const text = (a.innerText || a.textContent || "").trim().replace(/\s+/g, " ").slice(0, 80);
-            if (!text || text.length < 2) return;
+
+            // Try multiple sources for label text
+            let text = (a.innerText || a.textContent || "").trim().replace(/\s+/g, " ");
+            if (!text) text = (a.getAttribute("aria-label") || "").trim();
+            if (!text) text = (a.getAttribute("title") || "").trim();
+            if (!text) {
+              const img = a.querySelector("img");
+              if (img) text = (img.getAttribute("alt") || img.getAttribute("title") || "").trim();
+            }
+            if (!text) {
+              // Last resort: use the URL path segment as label
+              const seg = resolved.pathname.replace(/\/$/, "").split("/").filter(Boolean).pop();
+              if (seg) text = seg.replace(/[-_]/g, " ");
+            }
+            if (!text || text.length < 1) return;
+            text = text.slice(0, 80);
             results.push({ text, href: clean, section: classify(a) });
           } catch (_) {}
         });
