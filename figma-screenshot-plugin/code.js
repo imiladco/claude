@@ -11,7 +11,7 @@
 
 "use strict";
 
-const BASE_VERSION = "1.5.4";          // Must match CURRENT_VERSION in ui.html.
+const BASE_VERSION = "1.5.3";          // Must match CURRENT_VERSION in ui.html.
 const STORE_KEY    = "ws:settings";    // clientStorage: user settings + keys.
 const UI_CACHE_KEY = "ws:ui-cache";    // clientStorage: { version, html }.
 const WINDOW = { width: 380, height: 560, title: "Website Screenshot" };
