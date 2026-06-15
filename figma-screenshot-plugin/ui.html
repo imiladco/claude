@@ -594,7 +594,7 @@
 
   <!-- Footer -->
   <div class="footer">
-    <span class="version" id="version">v1.5.2</span>
+    <span class="version" id="version">v1.5.3</span>
     <div class="update-area">
       <span class="update-msg" id="updateMsg"></span>
       <button class="secondary" id="checkUpdate">Check for updates</button>
@@ -607,7 +607,7 @@
     /* ──────────────────────────────────────────────
        Constants
     ────────────────────────────────────────────── */
-    const CURRENT_VERSION = "1.5.2";
+    const CURRENT_VERSION = "1.5.3";
     const GITHUB_API = "https://api.github.com/repos/imiladco/claude/contents/figma-screenshot-plugin/ui.html";
     const KEY_PROVIDERS = ["self", "screenshotcore", "apiflash"];
     const FIGMA_MAX = 4096;                  // Max px per image dimension in Figma.
@@ -957,6 +957,24 @@
       return { tiles, totalWidth: W, totalHeight: H };
     }
 
+    /* Convert physical-pixel tile dims to logical (viewport) dims.
+       The raw image data stays at full resolution for sharp Figma rendering;
+       only the node size metadata is divided down to the viewport size. */
+    function toLogicalTiles(tiles, physW, physH, viewportW) {
+      if (!physW || physW === viewportW) return { tiles, logicalW: physW, logicalH: physH };
+      const s = physW / viewportW;
+      return {
+        tiles: tiles.map(t => ({
+          data:   t.data,
+          width:  Math.round(t.width  / s),
+          height: Math.round(t.height / s),
+          y:      Math.round(t.y      / s),
+        })),
+        logicalW: viewportW,
+        logicalH: Math.round(physH / s),
+      };
+    }
+
     /* ──────────────────────────────────────────────
        URL normalization
     ────────────────────────────────────────────── */
@@ -1023,9 +1041,10 @@
         const { tiles, totalWidth, totalHeight } = await buildTiles(blob, (i, n) => {
           if (n > 1) setStatus("loading", "Slicing tile " + i + "/" + n + "…");
         });
+        const { tiles: lgTiles, logicalW, logicalH } = toLogicalTiles(tiles, totalWidth, totalHeight, w);
         setStatus("loading", "Adding to canvas…");
         parent.postMessage({ pluginMessage: {
-          type: "add-image", tiles, totalWidth, totalHeight, url
+          type: "add-image", tiles: lgTiles, totalWidth: logicalW, totalHeight: logicalH, url
         } }, "*");
       } catch (err) {
         let msg = (err && err.message) ? err.message : "Capture failed.";
@@ -1501,7 +1520,8 @@
             const blob = await r.blob();
             if (!blob.type.startsWith("image/")) throw new Error("Not an image");
             const { tiles, totalWidth, totalHeight } = await buildTiles(blob);
-            captured[idx] = { ok:true, tiles, totalWidth, totalHeight, href, text };
+            const { tiles: lgTiles, logicalW, logicalH } = toLogicalTiles(tiles, totalWidth, totalHeight, w);
+            captured[idx] = { ok:true, tiles:lgTiles, totalWidth:logicalW, totalHeight:logicalH, href, text };
           } catch (err) {
             captured[idx] = { ok:false, href, text, error:(err && err.message) || "failed" };
           }
