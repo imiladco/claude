@@ -1,0 +1,11 @@
+{
+  "name": "playwright-screenshot-test",
+  "version": "1.0.0",
+  "description": "Quick test: full-page screenshot via Playwright",
+  "scripts": {
+    "test": "node screenshot.js"
+  },
+  "dependencies": {
+    "playwright": "^1.44.0"
+  }
+}
