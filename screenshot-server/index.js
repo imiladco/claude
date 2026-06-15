@@ -385,6 +385,7 @@ app.get("/crawl", auth, async (req, res) => {
       await page.goto(url, { waitUntil: "domcontentloaded", timeout: TIMEOUT_MS });
       await page.waitForTimeout(1200);
 
+      const pageTitle = await page.title().catch(() => "");
       const links = await page.evaluate((baseHref) => {
         const base = new URL(baseHref);
         const seen = new Set();
@@ -465,8 +466,12 @@ app.get("/crawl", auth, async (req, res) => {
         }
       } catch (_) {}
 
+      // Always prepend the home page as the first item
+      const homeLabel = pageTitle.split(/[-|–·]/)[0].trim() || "Home";
+      const homeEntry = { text: homeLabel, href: parsedUrl.origin, section: "home" };
+
       console.log(`[crawl] ${url} → ${links.length} + ${sitemapLinks.length} sitemap links`);
-      res.json({ links: [...links, ...sitemapLinks] });
+      res.json({ links: [homeEntry, ...links, ...sitemapLinks] });
     } finally {
       await ctx.close();
     }

@@ -1193,8 +1193,8 @@
     function renderLinkList(links) {
       const list = $("linkList");
       list.innerHTML = "";
-      const order  = ["header","nav","footer","sitemap","body"];
-      const labels = { header:"Header Nav", nav:"Navigation", footer:"Footer Links", sitemap:"Sitemap", body:"Page Links" };
+      const order  = ["home","header","nav","footer","sitemap","body"];
+      const labels = { home:"Home Page", header:"Header Nav", nav:"Navigation", footer:"Footer Links", sitemap:"Sitemap", body:"Page Links" };
 
       order.forEach(section => {
         const group = links.filter(l => l.section === section);
