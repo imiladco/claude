@@ -158,11 +158,39 @@ function inPageDismiss() {
   await page.evaluate(inPageDismiss); // third pass — some fire on delay
   await page.waitForTimeout(400);
 
-  // Scroll to trigger lazy-loaded content, 300ms between steps.
-  console.log("Scrolling to trigger lazy-load…");
+  // Slow scroll: triggers IntersectionObserver, scroll animations, lazy images.
+  console.log("Scrolling to trigger animations and lazy-load…");
   await page.evaluate(async () => {
+    // Patch IntersectionObserver so every observed element gets a
+    // full-intersection callback the moment it's observed — this forces
+    // AOS, ScrollReveal, GSAP ScrollTrigger, and similar libs to reveal
+    // content without waiting for the element to actually enter the viewport.
+    const NativeIO = window.IntersectionObserver;
+    window.IntersectionObserver = class extends NativeIO {
+      observe(el) {
+        super.observe(el);
+        try {
+          const rect = el.getBoundingClientRect();
+          this._forceCallback([{
+            isIntersecting: true, intersectionRatio: 1,
+            target: el, boundingClientRect: rect,
+            intersectionRect: rect, rootBounds: null, time: performance.now()
+          }], this);
+        } catch (_) {}
+      }
+      // Store callback reference on construction.
+      constructor(cb, opts) { super(cb, opts); this._forceCallback = cb; }
+    };
+
+    // Re-observe all already-registered elements so the patch applies.
+    // (Some libs observe in module-init before our patch — nothing we can do
+    // about those, the slow scroll below will catch them.)
+
+    // Slow scroll: 200px steps, 350ms apart.
+    // Most enter/reveal CSS transitions are 300–700ms, so this ensures they
+    // finish before the next step fires and before the screenshot is taken.
     await new Promise((resolve) => {
-      const step = 500, delay = 300;
+      const step = 200, delay = 350;
       let y = 0;
       const id = setInterval(() => {
         window.scrollBy(0, step);
@@ -176,9 +204,22 @@ function inPageDismiss() {
     });
   });
 
-  // Final settle.
-  await page.evaluate(inPageDismiss);
-  await page.waitForTimeout(1200);
+  // Final settle — also freeze all running CSS animations/transitions
+  // so the screenshot captures the final visible state, not a mid-animation frame.
+  await page.evaluate(() => {
+    inPageDismiss();
+    const style = document.createElement("style");
+    style.textContent = `
+      *, *::before, *::after {
+        animation-play-state: paused !important;
+        animation-delay: -9999s !important;
+        transition-duration: 0s !important;
+        transition-delay: 0s !important;
+      }
+    `;
+    document.head.appendChild(style);
+  });
+  await page.waitForTimeout(800);
 
   // Screenshot.
   const filename = "screenshot-" + new URL(url).hostname.replace(/^www\./, "") + ".png";
