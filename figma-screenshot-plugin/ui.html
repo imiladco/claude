@@ -229,6 +229,47 @@
     .update-msg.new { color: var(--warning); }
     .update-msg.err { color: var(--error); }
     #checkUpdate { padding: 5px 11px; font-size: 11px; }
+
+    /* ── Server status dot ──────────────────────── */
+    .server-status {
+      display: none;
+      align-items: center; gap: 6px;
+      font-size: 11px; color: var(--text-3);
+    }
+    .server-status.visible { display: flex; }
+    .status-dot {
+      width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0;
+      background: var(--text-3);
+      transition: background .3s;
+    }
+    .status-dot.online  { background: var(--success); }
+    .status-dot.offline { background: var(--error); }
+
+    /* ── Cancel + Re-capture ────────────────────── */
+    #cancelBtn {
+      display: none; width: 100%; margin-top: -4px;
+      padding: 7px 16px;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text-3); font-size: 12px; font-family: inherit;
+      cursor: pointer; transition: border-color .15s, color .15s;
+    }
+    #cancelBtn:hover { border-color: var(--error); color: var(--error); }
+    #cancelBtn.visible { display: block; }
+
+    #recaptureBtn {
+      display: none;
+      width: 100%; margin-top: -4px;
+      padding: 7px 16px;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text-2); font-size: 12px; font-family: inherit;
+      cursor: pointer; transition: border-color .15s, color .15s;
+    }
+    #recaptureBtn:hover { border-color: var(--accent); color: var(--accent); }
+    #recaptureBtn.visible { display: block; }
   </style>
 </head>
 <body>
@@ -253,7 +294,8 @@
   <div class="panel active" id="panel-capture">
     <div class="field">
       <label>Website URL</label>
-      <input type="url" id="url" placeholder="https://example.com" spellcheck="false" autocomplete="off" />
+      <input type="url" id="url" placeholder="https://example.com" spellcheck="false" autocomplete="off" list="urlHistory" />
+      <datalist id="urlHistory"></datalist>
     </div>
 
     <div class="row">
@@ -293,7 +335,14 @@
       <b>Setup required.</b> Open <b>Settings</b> to configure this provider.
     </div>
 
+    <div class="server-status" id="serverStatus">
+      <span class="status-dot" id="serverDot"></span>
+      <span id="serverStatusText">Checking server…</span>
+    </div>
+
     <button class="primary" id="capture">Capture full page</button>
+    <button id="cancelBtn">Cancel</button>
+    <button id="recaptureBtn">Capture again</button>
 
     <div class="status" id="status">
       <div class="status-inner">
@@ -375,7 +424,7 @@
 
   <!-- Footer -->
   <div class="footer">
-    <span class="version" id="version">v1.3.3</span>
+    <span class="version" id="version">v1.4.0</span>
     <div class="update-area">
       <span class="update-msg" id="updateMsg"></span>
       <button class="secondary" id="checkUpdate">Check for updates</button>
@@ -388,7 +437,7 @@
     /* ──────────────────────────────────────────────
        Constants
     ────────────────────────────────────────────── */
-    const CURRENT_VERSION = "1.3.3";
+    const CURRENT_VERSION = "1.4.0";
     const GITHUB_API = "https://api.github.com/repos/imiladco/claude/contents/figma-screenshot-plugin/ui.html";
     const KEY_PROVIDERS = ["self", "screenshotcore", "apiflash"];
     const FIGMA_MAX = 4096;                  // Max px per image dimension in Figma.
@@ -411,9 +460,11 @@
       scale: "2",
       provider: "microlink",
       keys:    { self: "", screenshotcore: "", apiflash: "" },
-      secrets: { self: "", screenshotcore: "" }
+      secrets: { self: "", screenshotcore: "" },
+      urlHistory: []    // last 8 successful URLs
     };
     let ready = false;
+    let abortController = null;
 
     function persist() {
       if (!ready) return;
@@ -424,12 +475,16 @@
        Element refs
     ────────────────────────────────────────────── */
     const $ = (id) => document.getElementById(id);
-    const urlInput   = $("url"),    widthSel = $("width"),
-          scaleSel   = $("scale"),  providerSel = $("provider"),
-          warn       = $("warn"),   captureBtn = $("capture"),
-          statusEl   = $("status"), statusText = $("statusText"),
+    const urlInput      = $("url"),       widthSel   = $("width"),
+          scaleSel      = $("scale"),     providerSel = $("provider"),
+          warn          = $("warn"),      captureBtn  = $("capture"),
+          cancelBtn     = $("cancelBtn"), recaptureBtn = $("recaptureBtn"),
+          statusEl      = $("status"),    statusText  = $("statusText"),
           statusSpinner = $("statusSpinner"), statusIcon = $("statusIcon"),
-          updateBtn  = $("checkUpdate"), updateMsg = $("updateMsg");
+          updateBtn     = $("checkUpdate"), updateMsg  = $("updateMsg"),
+          serverStatus  = $("serverStatus"), serverDot = $("serverDot"),
+          serverStatusText = $("serverStatusText"),
+          urlHistoryEl  = $("urlHistory");
 
     $("version").textContent = "v" + CURRENT_VERSION;
 
@@ -453,7 +508,7 @@
     widthSel.addEventListener("change", () => { state.width = widthSel.value; persist(); });
     scaleSel.addEventListener("change", () => { state.scale = scaleSel.value; persist(); });
     providerSel.addEventListener("change", () => {
-      state.provider = providerSel.value; refreshWarning(); persist();
+      state.provider = providerSel.value; refreshWarning(); refreshServerStatus(); persist();
     });
     warn.addEventListener("click", () => activateTab("settings"));
     urlInput.addEventListener("keydown", (e) => { if (e.key === "Enter") captureBtn.click(); });
@@ -461,6 +516,60 @@
     function refreshWarning() {
       const p = state.provider;
       warn.classList.toggle("show", KEY_PROVIDERS.includes(p) && !hasValidKey(p));
+    }
+
+    /* ── Server status dot (polls /health every 5s when self provider) ── */
+    let serverPollTimer = null;
+    function startServerPoll() {
+      stopServerPoll();
+      checkServerHealth();
+      serverPollTimer = setInterval(checkServerHealth, 5000);
+    }
+    function stopServerPoll() {
+      if (serverPollTimer) { clearInterval(serverPollTimer); serverPollTimer = null; }
+    }
+    async function checkServerHealth() {
+      const base = (state.keys["self"] || "http://localhost:3000").replace(/\/$/, "");
+      try {
+        const r = await fetch(base + "/health", { signal: AbortSignal.timeout(3000) });
+        const j = r.ok ? await r.json() : null;
+        if (j && j.ok) {
+          serverDot.className = "status-dot online";
+          serverStatusText.textContent = "Server online";
+        } else {
+          serverDot.className = "status-dot offline";
+          serverStatusText.textContent = "Server error";
+        }
+      } catch (_) {
+        serverDot.className = "status-dot offline";
+        serverStatusText.textContent = "Server offline — run start.bat";
+      }
+    }
+    function refreshServerStatus() {
+      if (state.provider === "self") {
+        serverStatus.classList.add("visible");
+        startServerPoll();
+      } else {
+        serverStatus.classList.remove("visible");
+        stopServerPoll();
+      }
+    }
+
+    /* ── URL history ────────────────────────────────────────────────── */
+    function pushUrlHistory(url) {
+      if (!url) return;
+      state.urlHistory = [url, ...(state.urlHistory || []).filter(u => u !== url)].slice(0, 8);
+      persist();
+      renderUrlHistory();
+    }
+    function renderUrlHistory() {
+      if (!urlHistoryEl) return;
+      urlHistoryEl.innerHTML = "";
+      (state.urlHistory || []).forEach(u => {
+        const opt = document.createElement("option");
+        opt.value = u;
+        urlHistoryEl.appendChild(opt);
+      });
     }
 
     /* ──────────────────────────────────────────────
@@ -530,6 +639,8 @@
       syncSettingsInputs();
       KEY_PROVIDERS.forEach(renderKeyStatus);
       refreshWarning();
+      refreshServerStatus();
+      renderUrlHistory();
     }
 
     /* ──────────────────────────────────────────────
@@ -572,8 +683,19 @@
     /* ──────────────────────────────────────────────
        Providers — each resolves to a single image Blob
     ────────────────────────────────────────────── */
-    async function fetchBlob(url) {
-      const r = await fetch(url);
+    async function fetchBlob(url, signal) {
+      let r;
+      try {
+        r = await fetch(url, signal ? { signal } : undefined);
+      } catch (err) {
+        if (err && err.name === "AbortError") throw err;
+        // Network-level failure — likely server not running
+        const msg = (err && err.message) || "";
+        if (/failed to fetch|networkerror|load failed/i.test(msg)) {
+          throw new Error("Cannot reach server — is it running? Run start.bat first.");
+        }
+        throw err;
+      }
       if (!r.ok) {
         let detail = "";
         try { detail = (await r.text()).slice(0, 160); } catch (_) {}
@@ -588,32 +710,32 @@
     }
 
     const PROVIDERS = {
-      self: (url, w, scale, serverUrl, token) => {
+      self: (url, w, scale, serverUrl, token, signal) => {
         const base = serverUrl.replace(/\/$/, "");
         let qs = "url=" + enc(url) + "&width=" + w + "&scale=" + scale;
         if (token) qs += "&token=" + enc(token);
-        return fetchBlob(base + "/screenshot?" + qs);
+        return fetchBlob(base + "/screenshot?" + qs, signal);
       },
 
-      microlink: async (url, w, scale) => {
+      microlink: async (url, w, scale, _k, _s, signal) => {
         const api =
           "https://api.microlink.io/?url=" + enc(url) +
           "&screenshot=true&meta=false&fullPage=true&type=png" +
           "&viewport.width=" + w + "&viewport.deviceScaleFactor=" + scale +
           "&disableAnimations=true&waitForTimeout=3500";
-        const r = await fetch(api);
+        const r = await fetch(api, signal ? { signal } : undefined);
         if (!r.ok) throw new Error("microlink HTTP " + r.status);
         const j = await r.json();
         const shot = j && j.data && j.data.screenshot && j.data.screenshot.url;
         if (j.status !== "success" || !shot)
           throw new Error(j.message || "microlink could not capture this URL.");
-        return fetchBlob(shot);
+        return fetchBlob(shot, signal);
       },
 
-      thum: (url, w) =>
-        fetchBlob("https://image.thum.io/get/width/" + w + "/fullpage/noanimate/" + url),
+      thum: (url, w, _scale, _k, _s, signal) =>
+        fetchBlob("https://image.thum.io/get/width/" + w + "/fullpage/noanimate/" + url, signal),
 
-      screenshotcore: async (url, w, scale, key, secret) => {
+      screenshotcore: async (url, w, scale, key, secret, signal) => {
         if (!key) throw new Error("ScreenshotCore: access key required (Settings).");
         if (!secret) throw new Error("ScreenshotCore: signing secret is required for browser calls. Add it in Settings.");
         const params = {
@@ -633,17 +755,18 @@
         const canonical = canonicalQuery(params);
         const sig = await hmacHex(secret, canonical);
         const qs = canonical + "&access_key=" + enc(key) + "&signature=" + sig;
-        return fetchBlob("https://screenshotcore.com/api/v1/screenshot?" + qs);
+        return fetchBlob("https://screenshotcore.com/api/v1/screenshot?" + qs, signal);
       },
 
-      apiflash: (url, w, scale, key) => {
+      apiflash: (url, w, scale, key, _s, signal) => {
         if (!key) throw new Error("ApiFlash access key required (Settings).");
         return fetchBlob(
           "https://api.apiflash.com/v1/urltoimage?access_key=" + enc(key) +
           "&url=" + enc(url) + "&width=" + w + "&scale_factor=" + scale +
           "&full_page=true&scroll_page=true&format=png" +
           "&no_cookie_banners=true&no_ads=true&no_tracking=true" +
-          "&wait_until=network_idle&delay=3"
+          "&wait_until=network_idle&delay=3",
+          signal
         );
       }
     };
@@ -701,14 +824,9 @@
     /* ──────────────────────────────────────────────
        Capture flow
     ────────────────────────────────────────────── */
-    captureBtn.addEventListener("click", async () => {
-      const url = normalizeUrl(urlInput.value);
-      if (!url) { setStatus("error", "Please enter a valid URL."); return; }
-      urlInput.value = url;
-      state.url = url; persist();
-
+    function doCapture(url) {
       const provider = state.provider;
-      const key = state.keys[provider] || "";
+      const key    = state.keys[provider] || "";
       const secret = state.secrets[provider] || "";
       if (KEY_PROVIDERS.includes(provider) && !hasValidKey(provider)) {
         const msg = provider === "screenshotcore"
@@ -721,27 +839,58 @@
         return;
       }
 
-      const w = parseInt(state.width, 10);
+      const w     = parseInt(state.width, 10);
       const scale = parseInt(state.scale, 10);
       const label = providerSel.options[providerSel.selectedIndex].text.split(" —")[0];
 
       captureBtn.disabled = true;
+      recaptureBtn.classList.remove("visible");
+      cancelBtn.classList.add("visible");
       setStatus("loading", "Capturing via " + label + "…");
 
-      try {
-        const blob = await PROVIDERS[provider](url, w, scale, key, secret);
+      abortController = new AbortController();
+      const signal = abortController.signal;
+
+      PROVIDERS[provider](url, w, scale, key, secret, signal).then(blob => {
         setStatus("loading", "Processing image…");
-        const { tiles, totalWidth, totalHeight } = await buildTiles(blob, (i, n) => {
+        return buildTiles(blob, (i, n) => {
           if (n > 1) setStatus("loading", "Slicing tile " + i + "/" + n + "…");
         });
+      }).then(({ tiles, totalWidth, totalHeight }) => {
         setStatus("loading", "Adding to canvas…");
         parent.postMessage({ pluginMessage: {
           type: "add-image", tiles, totalWidth, totalHeight, url
         } }, "*");
-      } catch (err) {
-        setStatus("error", (err && err.message) ? err.message : "Capture failed.");
+      }).catch(err => {
+        cancelBtn.classList.remove("visible");
         captureBtn.disabled = false;
-      }
+        if (err && err.name === "AbortError") {
+          setStatus("error", "Cancelled.");
+        } else {
+          setStatus("error", (err && err.message) ? err.message : "Capture failed.");
+        }
+      });
+    }
+
+    captureBtn.addEventListener("click", () => {
+      const url = normalizeUrl(urlInput.value);
+      if (!url) { setStatus("error", "Please enter a valid URL."); return; }
+      urlInput.value = url;
+      state.url = url; persist();
+      doCapture(url);
+    });
+
+    cancelBtn.addEventListener("click", () => {
+      if (abortController) { abortController.abort(); abortController = null; }
+      cancelBtn.classList.remove("visible");
+      captureBtn.disabled = false;
+    });
+
+    recaptureBtn.addEventListener("click", () => {
+      const url = normalizeUrl(urlInput.value) || state.url;
+      if (!url) return;
+      recaptureBtn.classList.remove("visible");
+      doCapture(url);
     });
 
     /* ──────────────────────────────────────────────
@@ -801,22 +950,49 @@
         case "init":
           if (msg.settings) {
             Object.assign(state, msg.settings);
-            state.keys    = Object.assign({ self: "", screenshotcore: "", apiflash: "" }, msg.settings.keys);
-            state.secrets = Object.assign({ self: "", screenshotcore: "" }, msg.settings.secrets);
+            state.keys       = Object.assign({ self: "", screenshotcore: "", apiflash: "" }, msg.settings.keys);
+            state.secrets    = Object.assign({ self: "", screenshotcore: "" }, msg.settings.secrets);
+            state.urlHistory = msg.settings.urlHistory || [];
           }
           ready = true;
           applyState();
+          // Auto-check for updates 3s after load
+          setTimeout(() => silentUpdateCheck(), 3000);
           break;
         case "done":
-          setStatus("success", "Screenshot added to canvas.");
+          cancelBtn.classList.remove("visible");
           captureBtn.disabled = false;
+          recaptureBtn.classList.add("visible");
+          setStatus("success", "Screenshot added to canvas.");
+          pushUrlHistory(state.url);
           break;
         case "error":
+          cancelBtn.classList.remove("visible");
           setStatus("error", msg.message || "Something went wrong.");
           captureBtn.disabled = false;
           break;
       }
     };
+
+    /* Silently check for updates on load — only apply if newer, no UI noise. */
+    async function silentUpdateCheck() {
+      try {
+        const r = await fetch(GITHUB_API + "?t=" + Date.now(), {
+          headers: { Accept: "application/vnd.github.v3+json" }
+        });
+        if (!r.ok) return;
+        const j = await r.json();
+        const html = decodeURIComponent(escape(atob((j.content || "").replace(/\n/g, ""))));
+        const m = html.match(/CURRENT_VERSION\s*=\s*["']([^"']+)["']/);
+        if (!m) return;
+        const latest = m[1];
+        if (!versionGT(latest, CURRENT_VERSION)) return;
+        // New version available — show in footer and apply
+        updateMsg.className = "update-msg new";
+        updateMsg.textContent = "v" + latest + " available";
+        parent.postMessage({ pluginMessage: { type: "apply-update", version: latest, html } }, "*");
+      } catch (_) {}
+    }
 
     /* Ask the sandbox for saved settings. */
     parent.postMessage({ pluginMessage: { type: "ui-ready" } }, "*");

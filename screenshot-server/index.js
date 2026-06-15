@@ -3,35 +3,57 @@
 const express  = require("express");
 const { chromium } = require("playwright");
 
-const PORT       = process.env.PORT       || 3000;
-const AUTH_TOKEN = process.env.AUTH_TOKEN || "";   // Set this env var on deploy.
-const MAX_QUEUE  = parseInt(process.env.MAX_QUEUE  || "5", 10);
-const TIMEOUT_MS = parseInt(process.env.TIMEOUT_MS || "60000", 10);
+const PORT        = process.env.PORT        || 3000;
+const AUTH_TOKEN  = process.env.AUTH_TOKEN  || "";
+const MAX_QUEUE   = parseInt(process.env.MAX_QUEUE   || "5",  10);
+const TIMEOUT_MS  = parseInt(process.env.TIMEOUT_MS  || "60000", 10);
+const RESTART_AFTER = parseInt(process.env.RESTART_AFTER || "50", 10); // restart browser every N requests
 
-// ── Browser pool ────────────────────────────────────────────────────
-// One long-lived Chromium instance, recreated if it crashes.
+// ── Browser management ───────────────────────────────────────────────
 let browser = null;
+let requestCount = 0;
 
-async function getBrowser() {
-  if (browser && browser.isConnected()) return browser;
+async function launchBrowser() {
   browser = await chromium.launch({
     headless: true,
     args: [
       "--no-sandbox", "--disable-setuid-sandbox",
-      "--disable-dev-shm-usage",          // Needed on Railway / Render.
-      "--disable-gpu",
+      "--disable-dev-shm-usage", "--disable-gpu",
       "--disable-background-timer-throttling",
       "--disable-renderer-backgrounding",
     ],
   });
-  browser.on("disconnected", () => { browser = null; });
+  browser.on("disconnected", () => {
+    browser = null;
+    requestCount = 0;
+    console.log("[browser] disconnected — will restart on next request.");
+    // Auto-restart after 2s so next request doesn't cold-start
+    setTimeout(() => launchBrowser().catch(() => {}), 2000);
+  });
+  requestCount = 0;
+  console.log("[browser] launched.");
   return browser;
 }
 
-// Pre-warm on startup so first request is fast.
-getBrowser().catch(() => {});
+async function getBrowser() {
+  // Periodic restart to free accumulated memory
+  if (browser && browser.isConnected() && requestCount >= RESTART_AFTER) {
+    console.log(`[browser] restarting after ${RESTART_AFTER} requests…`);
+    await browser.close().catch(() => {});
+    // 'disconnected' handler will set browser=null and relaunch
+    await new Promise(r => setTimeout(r, 2500));
+  }
+  if (!browser || !browser.isConnected()) {
+    await launchBrowser();
+  }
+  requestCount++;
+  return browser;
+}
 
-// ── Concurrency queue ───────────────────────────────────────────────
+// Pre-warm on startup
+launchBrowser().catch(() => {});
+
+// ── Concurrency queue ────────────────────────────────────────────────
 let activeCount = 0;
 const waitQueue = [];
 
@@ -47,7 +69,7 @@ function acquireSlot() {
 }
 
 function releaseSlot() {
-  activeCount--;
+  activeCount = Math.max(0, activeCount - 1);
   if (waitQueue.length) {
     const next = waitQueue.shift();
     activeCount++;
@@ -55,7 +77,7 @@ function releaseSlot() {
   }
 }
 
-// ── Network patterns to block ───────────────────────────────────────
+// ── Block list ───────────────────────────────────────────────────────
 const BLOCKED = [
   /doubleclick\.net/, /googlesyndication\.com/, /googletagmanager\.com/,
   /google-analytics\.com/, /ga\.js/, /gtag\/js/, /fbevents\.js/,
@@ -70,7 +92,7 @@ const BLOCKED = [
   /onetrust\.com/, /quantserve\.com/,
 ];
 
-// ── CSS injected before any page script runs ───────────────────────
+// ── CSS injected before page scripts ────────────────────────────────
 const HIDE_CSS = `
   [class*="cookie"],[id*="cookie"],[class*="consent"],[id*="consent"],
   [class*="gdpr"],[id*="gdpr"],[class*="CookieBanner"],[id*="CookieBanner"],
@@ -101,7 +123,7 @@ const HIDE_CSS = `
   html,body { overflow:visible!important; position:static!important; }
 `;
 
-// ── In-page JS: dismiss overlays + remove scroll-lock ──────────────
+// ── In-page dismiss function ─────────────────────────────────────────
 function inPageDismiss() {
   document.documentElement.style.overflow = "visible";
   document.body.style.overflow = "visible";
@@ -110,13 +132,12 @@ function inPageDismiss() {
     "accept","accept all","agree","got it","i agree",
     "close","dismiss","no thanks","maybe later","×","✕","✗",
   ];
-  document.querySelectorAll("button,[role=button],a").forEach((el) => {
+  document.querySelectorAll("button,[role=button],a").forEach(el => {
     const t = (el.textContent || el.getAttribute("aria-label") || "").trim().toLowerCase();
-    if (DISMISS.some((d) => t === d || t.startsWith(d))) {
-      try { el.click(); } catch (_) {}
-    }
+    if (DISMISS.some(d => t === d || t.startsWith(d)))
+      try { el.click(); } catch(_) {}
   });
-  document.querySelectorAll("*").forEach((el) => {
+  document.querySelectorAll("*").forEach(el => {
     try {
       const s = window.getComputedStyle(el);
       const z = parseInt(s.zIndex, 10);
@@ -125,11 +146,11 @@ function inPageDismiss() {
         if (tag !== "nav" && tag !== "header")
           el.style.setProperty("display", "none", "important");
       }
-    } catch (_) {}
+    } catch(_) {}
   });
 }
 
-// ── Core screenshot logic ───────────────────────────────────────────
+// ── Core screenshot ──────────────────────────────────────────────────
 async function takeScreenshot({ url, width, scale }) {
   const b = await getBrowser();
   const ctx = await b.newContext({
@@ -137,34 +158,25 @@ async function takeScreenshot({ url, width, scale }) {
     deviceScaleFactor: scale,
     userAgent:
       "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) " +
-      "AppleWebKit/537.36 (KHTML, like Gecko) " +
-      "Chrome/124.0.0.0 Safari/537.36",
+      "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
   });
 
   try {
     const page = await ctx.newPage();
 
-    // Block ad/tracker networks.
-    await page.route("**/*", (route) =>
-      BLOCKED.some((r) => r.test(route.request().url()))
-        ? route.abort()
-        : route.continue()
+    await page.route("**/*", route =>
+      BLOCKED.some(r => r.test(route.request().url()))
+        ? route.abort() : route.continue()
     );
 
-    // Inject CSS + IO patch before any page scripts.
     await page.addInitScript(`
       (function() {
-        // Hide overlays via CSS as early as possible.
         const s = document.createElement("style");
         s.textContent = ${JSON.stringify(HIDE_CSS)};
         const inject = () => document.head && document.head.appendChild(s);
         document.readyState === "loading"
           ? document.addEventListener("DOMContentLoaded", inject)
           : inject();
-
-        // Patch IntersectionObserver so every observed element gets an
-        // immediate full-intersection callback — reveals AOS / ScrollReveal /
-        // GSAP ScrollTrigger content without real scrolling.
         const NativeIO = window.IntersectionObserver;
         window.IntersectionObserver = class extends NativeIO {
           constructor(cb, opts) { super(cb, opts); this._cb = cb; }
@@ -173,9 +185,9 @@ async function takeScreenshot({ url, width, scale }) {
             try {
               const r = el.getBoundingClientRect();
               this._cb([{
-                isIntersecting: true, intersectionRatio: 1, target: el,
-                boundingClientRect: r, intersectionRect: r,
-                rootBounds: null, time: performance.now()
+                isIntersecting:true, intersectionRatio:1, target:el,
+                boundingClientRect:r, intersectionRect:r,
+                rootBounds:null, time:performance.now()
               }], this);
             } catch(_) {}
           }
@@ -183,55 +195,44 @@ async function takeScreenshot({ url, width, scale }) {
       })();
     `);
 
-    // Navigate.
     await page.goto(url, { waitUntil: "networkidle", timeout: TIMEOUT_MS });
-
-    // First dismiss pass.
     await page.evaluate(inPageDismiss);
     await page.waitForTimeout(600);
 
-    // Expand accordions / disclosure widgets.
+    // Expand accordions
     await page.evaluate(() => {
       [
         "[aria-expanded='false']",
-        "[data-toggle='collapse']", "[data-bs-toggle='collapse']",
-        ".accordion-toggle", ".accordion-header", ".accordion-button",
-        ".faq-toggle", ".faq-question", ".faq-header",
+        "[data-toggle='collapse']","[data-bs-toggle='collapse']",
+        ".accordion-toggle",".accordion-header",".accordion-button",
+        ".faq-toggle",".faq-question",".faq-header",
         "[class*='accordion'] [class*='header']",
         "[class*='accordion'] [class*='title']",
-      ].forEach((sel) =>
-        document.querySelectorAll(sel).forEach((el) => {
-          try { el.click(); } catch (_) {}
-        })
+      ].forEach(sel =>
+        document.querySelectorAll(sel).forEach(el => { try { el.click(); } catch(_){} })
       );
     });
     await page.waitForTimeout(500);
 
-    // Slow scroll (200 px / 350 ms) to trigger lazy images and
-    // any animations the IO patch didn't catch.
+    // Adaptive slow scroll — speed based on page height
     await page.evaluate(async () => {
-      await new Promise((resolve) => {
-        const step = 200, delay = 350;
+      const pageH = document.body.scrollHeight;
+      const step  = pageH > 10000 ? 300 : 200;
+      const delay = pageH > 10000 ? 250 : 350;
+      await new Promise(resolve => {
         let y = 0;
         const id = setInterval(() => {
           window.scrollBy(0, step);
           y += step;
-          if (y >= document.body.scrollHeight) {
-            window.scrollTo(0, 0);
-            clearInterval(id);
-            resolve();
-          }
+          if (y >= pageH) { window.scrollTo(0, 0); clearInterval(id); resolve(); }
         }, delay);
       });
     });
 
-    // Force all still-hidden animated elements to their final visible state.
+    // Force hidden animated elements visible
     await page.evaluate(() => {
-      const ANIM_CLASSES = [
-        "aos-animate","animated","wow","is-visible",
-        "is-inview","in-view","entered","revealed","show",
-      ];
-      document.querySelectorAll("*").forEach((el) => {
+      const ANIM = ["aos-animate","animated","wow","is-visible","is-inview","in-view","entered","revealed","show"];
+      document.querySelectorAll("*").forEach(el => {
         try {
           const s = window.getComputedStyle(el);
           const hidden =
@@ -241,46 +242,57 @@ async function takeScreenshot({ url, width, scale }) {
           if (hidden) {
             const r = el.getBoundingClientRect();
             if (r.width > 0 || el.children.length > 0) {
-              ANIM_CLASSES.forEach((c) => el.classList.add(c));
+              ANIM.forEach(c => el.classList.add(c));
               el.style.setProperty("opacity", "1", "important");
               el.style.setProperty("visibility", "visible", "important");
               el.style.setProperty("transform", "none", "important");
             }
           }
-        } catch (_) {}
+        } catch(_) {}
       });
     });
     await page.waitForTimeout(400);
 
-    // Second dismiss pass (accordions may have triggered new overlays).
     await page.evaluate(inPageDismiss);
 
-    // Freeze all ongoing CSS animations / transitions.
+    // Freeze animations
     await page.evaluate(() => {
       const s = document.createElement("style");
-      s.textContent = `*,*::before,*::after {
+      s.textContent = `*,*::before,*::after{
         animation-play-state:paused!important;
         animation-delay:-9999s!important;
         transition-duration:0s!important;
-        transition-delay:0s!important;
-      }`;
+        transition-delay:0s!important;}`;
       document.head.appendChild(s);
     });
     await page.waitForTimeout(500);
 
-    // Capture.
-    const buffer = await page.screenshot({ fullPage: true, type: "png" });
-    return buffer;
-
+    return await page.screenshot({ fullPage: true, type: "png" });
   } finally {
     await ctx.close();
   }
 }
 
-// ── Express app ─────────────────────────────────────────────────────
+// Retry wrapper — 2 retries with 1.5s delay
+async function takeScreenshotWithRetry(params) {
+  let lastErr;
+  for (let i = 0; i < 3; i++) {
+    try {
+      return await takeScreenshot(params);
+    } catch (err) {
+      lastErr = err;
+      if (i < 2) {
+        console.warn(`[retry ${i+1}] ${params.url} — ${err.message}`);
+        await new Promise(r => setTimeout(r, 1500));
+      }
+    }
+  }
+  throw lastErr;
+}
+
+// ── Express ──────────────────────────────────────────────────────────
 const app = express();
 
-// CORS — allow any origin (Figma plugin iframes have null origin).
 app.use((req, res, next) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
@@ -289,7 +301,6 @@ app.use((req, res, next) => {
   next();
 });
 
-// Auth middleware.
 function auth(req, res, next) {
   if (!AUTH_TOKEN) return next();
   const token =
@@ -300,7 +311,6 @@ function auth(req, res, next) {
   next();
 }
 
-// ── GET /screenshot ──────────────────────────────────────────────────
 app.get("/screenshot", auth, async (req, res) => {
   const { url, width = "1440", scale = "2" } = req.query;
   if (!url) return res.status(400).json({ error: "Missing ?url=" });
@@ -308,46 +318,45 @@ app.get("/screenshot", auth, async (req, res) => {
   let parsedUrl;
   try {
     parsedUrl = new URL(url);
-    if (!["http:", "https:"].includes(parsedUrl.protocol))
+    if (!["http:","https:"].includes(parsedUrl.protocol))
       throw new Error("Protocol must be http or https.");
   } catch (e) {
     return res.status(400).json({ error: "Invalid URL: " + e.message });
   }
 
   const w = Math.max(320, Math.min(2560, parseInt(width, 10) || 1440));
-  const s = Math.max(1, Math.min(3, parseFloat(scale) || 2));
+  const s = Math.max(1,   Math.min(3,    parseFloat(scale)   || 2));
 
-  try {
-    await acquireSlot();
-  } catch {
-    return res.status(503).json({ error: "Server busy — try again shortly." });
-  }
+  try { await acquireSlot(); }
+  catch { return res.status(503).json({ error: "Server busy — try again shortly." }); }
 
   const t0 = Date.now();
   try {
-    const buffer = await takeScreenshot({ url, width: w, scale: s });
-    const elapsed = Date.now() - t0;
+    const buffer = await takeScreenshotWithRetry({ url, width: w, scale: s });
     res.setHeader("Content-Type", "image/png");
-    res.setHeader("X-Capture-Ms", elapsed);
+    res.setHeader("X-Capture-Ms", Date.now() - t0);
     res.setHeader("Cache-Control", "no-store");
     res.send(buffer);
-    console.log(`[${new Date().toISOString()}] ${url} ${w}px@${s}x → ${(buffer.length/1024).toFixed(0)} KB in ${elapsed}ms`);
+    console.log(`[ok] ${url} ${w}px@${s}x — ${(buffer.length/1024).toFixed(0)}KB in ${Date.now()-t0}ms`);
   } catch (err) {
-    console.error(`[ERROR] ${url} —`, err.message);
+    console.error(`[err] ${url} —`, err.message);
     res.status(500).json({ error: err.message || "Screenshot failed." });
   } finally {
     releaseSlot();
   }
 });
 
-// ── GET /health ──────────────────────────────────────────────────────
 app.get("/health", (_req, res) => {
-  res.json({ ok: true, active: activeCount, queue: waitQueue.length });
+  res.json({
+    ok: true,
+    browser: browser ? browser.isConnected() : false,
+    active: activeCount,
+    queue: waitQueue.length,
+    requests: requestCount,
+  });
 });
 
-// ── Start ─────────────────────────────────────────────────────────────
 app.listen(PORT, () => {
-  console.log(`Screenshot server running on port ${PORT}`);
-  if (!AUTH_TOKEN)
-    console.warn("WARNING: AUTH_TOKEN not set — server is open to anyone.");
+  console.log(`Screenshot server on port ${PORT}`);
+  if (!AUTH_TOKEN) console.warn("WARNING: AUTH_TOKEN not set — server is open.");
 });

@@ -9,18 +9,30 @@ echo   Screenshot Server — One-time Setup
 echo  =========================================
 echo.
 
-:: ── Step 1: Install Node packages ──────────────────────────────────
+:: ── Step 0: Check Node.js ────────────────────────────────────────────
+where node >nul 2>&1
+if errorlevel 1 (
+  echo  ERROR: Node.js is not installed.
+  echo  Download it from:  https://nodejs.org
+  echo  Install Node.js, then re-run this script.
+  echo.
+  pause & exit /b 1
+)
+for /f "tokens=*" %%v in ('node -v') do set NODE_VER=%%v
+echo  Node.js %NODE_VER% found.
+echo.
+
+:: ── Step 1: Install Node packages ────────────────────────────────────
 echo  [1/3] Installing packages...
 call npm install --silent
 if errorlevel 1 (
-  echo  ERROR: npm install failed. Make sure Node.js is installed.
-  echo  Download: https://nodejs.org
+  echo  ERROR: npm install failed.
   pause & exit /b 1
 )
 echo  Done.
 echo.
 
-:: ── Step 2: Install Playwright browser ─────────────────────────────
+:: ── Step 2: Install Playwright browser ───────────────────────────────
 echo  [2/3] Installing Chromium browser for Playwright...
 call npx playwright install chromium --with-deps
 if errorlevel 1 (
@@ -29,28 +41,35 @@ if errorlevel 1 (
 echo  Done.
 echo.
 
-:: ── Step 3: Register auto-start on Windows login ───────────────────
-echo  [3/3] Registering auto-start on login...
+:: ── Step 3: Register auto-start via Task Scheduler ───────────────────
+echo  [3/3] Registering auto-start on login (Task Scheduler)...
 
 set "DIR=%~dp0"
-:: Remove trailing backslash
 if "%DIR:~-1%"=="\" set "DIR=%DIR:~0,-1%"
 
-set "VBS=%APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup\screenshot-server.vbs"
+:: Remove any existing task with this name first
+schtasks /delete /tn "FigmaScreenshotServer" /f >nul 2>&1
 
-:: Write VBS that silently starts the server in background
-(
-  echo Set sh = CreateObject^("WScript.Shell"^)
-  echo sh.CurrentDirectory = "%DIR%"
-  echo sh.Run "node index.js", 0, False
-) > "%VBS%"
+:: Register a new task that runs at user logon, hidden, no window
+powershell -NoProfile -ExecutionPolicy Bypass -Command ^
+  "$a = New-ScheduledTaskAction -Execute 'node' -Argument 'index.js' -WorkingDirectory '%DIR%';" ^
+  "$t = New-ScheduledTaskTrigger -AtLogOn -User $env:USERNAME;" ^
+  "$s = New-ScheduledTaskSettingsSet -ExecutionTimeLimit 0 -RestartCount 3 -RestartInterval (New-TimeSpan -Minutes 2);" ^
+  "$p = New-ScheduledTaskPrincipal -UserId $env:USERNAME -LogonType Interactive -RunLevel Limited;" ^
+  "Register-ScheduledTask -TaskName 'FigmaScreenshotServer' -Action $a -Trigger $t -Settings $s -Principal $p -Force | Out-Null;" ^
+  "Write-Host 'Task registered.'"
 
-echo  Done.
+if errorlevel 1 (
+  echo  WARNING: Could not register Task Scheduler task. You can still run start.bat manually.
+) else (
+  echo  Done.
+)
 echo.
 
-:: ── Start the server right now ──────────────────────────────────────
+:: ── Start the server right now ────────────────────────────────────────
 echo  Starting server in background...
-start "" /b wscript "%VBS%"
+start "" /b node "%DIR%\index.js"
+timeout /t 2 /nobreak >nul
 
 echo.
 echo  =========================================
@@ -63,7 +82,7 @@ echo   In Figma plugin Settings:
 echo     Server URL:  http://localhost:3000
 echo     Auth token:  (leave empty)
 echo.
-echo   To stop the server, run:  stop.bat
+echo   To stop the server:       stop.bat
 echo   To uninstall auto-start:  uninstall.bat
 echo  =========================================
 echo.
