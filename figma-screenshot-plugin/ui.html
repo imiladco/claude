@@ -594,7 +594,7 @@
 
   <!-- Footer -->
   <div class="footer">
-    <span class="version" id="version">v1.5.3</span>
+    <span class="version" id="version">v1.5.4</span>
     <div class="update-area">
       <span class="update-msg" id="updateMsg"></span>
       <button class="secondary" id="checkUpdate">Check for updates</button>
@@ -607,7 +607,7 @@
     /* ──────────────────────────────────────────────
        Constants
     ────────────────────────────────────────────── */
-    const CURRENT_VERSION = "1.5.3";
+    const CURRENT_VERSION = "1.5.4";
     const GITHUB_API = "https://api.github.com/repos/imiladco/claude/contents/figma-screenshot-plugin/ui.html";
     const KEY_PROVIDERS = ["self", "screenshotcore", "apiflash"];
     const FIGMA_MAX = 4096;                  // Max px per image dimension in Figma.
@@ -926,35 +926,31 @@
       const bmp = await createImageBitmap(blob);
       const ow = bmp.width, oh = bmp.height;
 
-      // Scale down if wider than Figma's 4096px per-dimension limit.
-      const scale = ow > FIGMA_MAX ? FIGMA_MAX / ow : 1;
-      const W = Math.round(ow * scale);
-      const H = Math.round(oh * scale);
+      // Fit both dimensions within Figma's 4096px limit in a single draw —
+      // always one tile, no visible seams at boundaries.
+      const s = Math.min(
+        ow > FIGMA_MAX ? FIGMA_MAX / ow : 1,
+        oh > FIGMA_MAX ? FIGMA_MAX / oh : 1
+      );
+      const W = Math.round(ow * s);
+      const H = Math.round(oh * s);
 
-      const tileCount = Math.max(1, Math.ceil(H / FIGMA_MAX));
-      const tiles = [];
-      let y = 0, idx = 0;
+      if (onProgress) onProgress(1, 1);
 
-      while (y < H) {
-        idx++;
-        if (onProgress) onProgress(idx, tileCount);
-        const th = Math.min(FIGMA_MAX, H - y);
-        const cv = new OffscreenCanvas(W, th);
-        const ctx = cv.getContext("2d");
-        ctx.drawImage(bmp, 0, y / scale, ow, th / scale, 0, 0, W, th);
+      const cv  = new OffscreenCanvas(W, H);
+      const ctx = cv.getContext("2d");
+      ctx.drawImage(bmp, 0, 0, ow, oh, 0, 0, W, H);
 
-        let out = await cv.convertToBlob({ type: "image/png" });
-        if (out.size > TILE_BYTE_LIMIT) {
-          out = await cv.convertToBlob({ type: "image/jpeg", quality: 0.92 });
-        }
-        tiles.push({
-          data: Array.from(new Uint8Array(await out.arrayBuffer())),
-          width: W, height: th, y
-        });
-        y += th;
+      let out = await cv.convertToBlob({ type: "image/png" });
+      if (out.size > TILE_BYTE_LIMIT) {
+        out = await cv.convertToBlob({ type: "image/jpeg", quality: 0.92 });
       }
       if (bmp.close) bmp.close();
-      return { tiles, totalWidth: W, totalHeight: H };
+      return {
+        tiles: [{ data: Array.from(new Uint8Array(await out.arrayBuffer())), width: W, height: H, y: 0 }],
+        totalWidth: W,
+        totalHeight: H,
+      };
     }
 
     /* Scale tile node-size metadata to logical (viewport) dimensions.
