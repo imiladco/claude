@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-OS="$(uname -s)"
-
-echo "Stopping Screenshot Server..."
-
-# Kill any node process running index.js from this folder
-DIR="$(cd "$(dirname "$0")" && pwd)"
-pkill -f "node.*$DIR/index.js" 2>/dev/null && echo "Stopped." || echo "Server was not running."
+if [[ "$OSTYPE" == "darwin"* ]]; then
+  launchctl stop com.figma.screenshot-server 2>/dev/null
+  echo "Server stopped."
+else
+  systemctl --user stop screenshot-server
+  echo "Server stopped."
+fi

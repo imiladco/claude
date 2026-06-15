@@ -1,29 +1,31 @@
 @echo off
 setlocal EnableDelayedExpansion
-title Screenshot Server — Install
+title Screenshot Server — Setup
 color 0A
 
 echo.
-echo  =========================================
+echo  ==========================================
 echo   Screenshot Server — One-time Setup
-echo  =========================================
+echo  ==========================================
 echo.
 
-:: ── Step 0: Check Node.js ────────────────────────────────────────────
-where node >nul 2>&1
+:: ── Check Node.js ──────────────────────────────────────────────────
+echo  [0/3] Checking Node.js...
+where node >/dev/null 2>&1
 if errorlevel 1 (
+  echo.
   echo  ERROR: Node.js is not installed.
-  echo  Download it from:  https://nodejs.org
-  echo  Install Node.js, then re-run this script.
+  echo  Download from: https://nodejs.org  (LTS version)
   echo.
   pause & exit /b 1
 )
-for /f "tokens=*" %%v in ('node -v') do set NODE_VER=%%v
-echo  Node.js %NODE_VER% found.
+for /f "tokens=*" %%v in ('node --version') do set NODE_VER=%%v
+echo  Found Node.js %NODE_VER%
 echo.
 
-:: ── Step 1: Install Node packages ────────────────────────────────────
+:: ── Install packages ───────────────────────────────────────────────
 echo  [1/3] Installing packages...
+cd /d "%~dp0"
 call npm install --silent
 if errorlevel 1 (
   echo  ERROR: npm install failed.
@@ -32,58 +34,68 @@ if errorlevel 1 (
 echo  Done.
 echo.
 
-:: ── Step 2: Install Playwright browser ───────────────────────────────
-echo  [2/3] Installing Chromium browser for Playwright...
+:: ── Install Playwright browser ─────────────────────────────────────
+echo  [2/3] Installing Chromium (this may take a minute)...
 call npx playwright install chromium --with-deps
-if errorlevel 1 (
-  echo  WARNING: Playwright install may have had issues. Continuing...
-)
 echo  Done.
 echo.
 
-:: ── Step 3: Register auto-start via Task Scheduler ───────────────────
-echo  [3/3] Registering auto-start on login (Task Scheduler)...
+:: ── Register Windows Task Scheduler (no VBS, no AV issues) ────────
+echo  [3/3] Registering auto-start on login...
 
 set "DIR=%~dp0"
 if "%DIR:~-1%"=="\" set "DIR=%DIR:~0,-1%"
 
-:: Remove any existing task with this name first
-schtasks /delete /tn "FigmaScreenshotServer" /f >nul 2>&1
+:: Find node.exe path
+for /f "tokens=*" %%n in ('where node.exe') do set "NODE_EXE=%%n" & goto :found_node
+:found_node
 
-:: Register a new task that runs at user logon, hidden, no window
+:: Use PowerShell to create a properly hidden scheduled task
 powershell -NoProfile -ExecutionPolicy Bypass -Command ^
-  "$a = New-ScheduledTaskAction -Execute 'node' -Argument 'index.js' -WorkingDirectory '%DIR%';" ^
-  "$t = New-ScheduledTaskTrigger -AtLogOn -User $env:USERNAME;" ^
-  "$s = New-ScheduledTaskSettingsSet -ExecutionTimeLimit 0 -RestartCount 3 -RestartInterval (New-TimeSpan -Minutes 2);" ^
-  "$p = New-ScheduledTaskPrincipal -UserId $env:USERNAME -LogonType Interactive -RunLevel Limited;" ^
-  "Register-ScheduledTask -TaskName 'FigmaScreenshotServer' -Action $a -Trigger $t -Settings $s -Principal $p -Force | Out-Null;" ^
+  "$dir = '%DIR:\=\\%'; " ^
+  "$node = '%NODE_EXE:\=\\%'; " ^
+  "$action = New-ScheduledTaskAction -Execute $node -Argument 'index.js' -WorkingDirectory $dir; " ^
+  "$trigger = New-ScheduledTaskTrigger -AtLogOn; " ^
+  "$settings = New-ScheduledTaskSettingsSet -Hidden -ExecutionTimeLimit 0 -RestartCount 3 -RestartInterval (New-TimeSpan -Minutes 1); " ^
+  "$principal = New-ScheduledTaskPrincipal -UserId $env:USERNAME -RunLevel Limited; " ^
+  "Register-ScheduledTask -TaskName 'FigmaScreenshotServer' -Action $action -Trigger $trigger -Settings $settings -Principal $principal -Force | Out-Null; " ^
   "Write-Host 'Task registered.'"
 
 if errorlevel 1 (
-  echo  WARNING: Could not register Task Scheduler task. You can still run start.bat manually.
+  echo  WARNING: Could not register Task Scheduler. Try running as Administrator.
+  echo  The server will still work — just run start.bat manually.
 ) else (
-  echo  Done.
+  echo  Done. Server will auto-start on every login (hidden, no window).
 )
 echo.
 
-:: ── Start the server right now ────────────────────────────────────────
-echo  Starting server in background...
-start "" /b node "%DIR%\index.js"
-timeout /t 2 /nobreak >nul
+:: ── Start the server right now ─────────────────────────────────────
+echo  Starting server now...
+powershell -NoProfile -Command ^
+  "Start-Process -FilePath '%NODE_EXE%' -ArgumentList 'index.js' " ^
+  "-WorkingDirectory '%DIR%' -WindowStyle Hidden"
+
+:: Wait a moment then verify
+timeout /t 3 /nobreak >/dev/null
+powershell -NoProfile -Command ^
+  "try { $r=(Invoke-WebRequest http://localhost:3000/health -UseBasicParsing -TimeoutSec 5).Content; " ^
+  "if($r -match 'ok') { Write-Host ' Server is running!' } } " ^
+  "catch { Write-Host ' Server starting (check http://localhost:3000/health)' }"
 
 echo.
-echo  =========================================
+echo  ==========================================
 echo   Setup complete!
 echo.
-echo   Server is running on http://localhost:3000
-echo   It will auto-start every time you log in.
+echo   Server: http://localhost:3000
+echo   Auto-starts silently on every Windows login.
 echo.
 echo   In Figma plugin Settings:
+echo     Provider:    Self-hosted Playwright
 echo     Server URL:  http://localhost:3000
-echo     Auth token:  (leave empty)
+echo     Token:       (leave empty)
 echo.
-echo   To stop the server:       stop.bat
-echo   To uninstall auto-start:  uninstall.bat
-echo  =========================================
+echo   stop.bat       — stop the server
+echo   uninstall.bat  — remove auto-start
+echo  ==========================================
 echo.
 pause
