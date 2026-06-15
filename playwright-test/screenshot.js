@@ -204,10 +204,9 @@ function inPageDismiss() {
     });
   });
 
-  // Final settle — also freeze all running CSS animations/transitions
-  // so the screenshot captures the final visible state, not a mid-animation frame.
+  // Final dismiss pass + freeze all animations so screenshot is fully rendered.
+  await page.evaluate(inPageDismiss);
   await page.evaluate(() => {
-    inPageDismiss();
     const style = document.createElement("style");
     style.textContent = `
       *, *::before, *::after {
