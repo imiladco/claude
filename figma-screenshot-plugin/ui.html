@@ -312,8 +312,8 @@
     <div class="group">
       <span class="group-title">Self-hosted Playwright</span>
       <div class="field">
-        <label>Server URL <a href="https://github.com/imiladco/claude/tree/main/screenshot-server" target="_blank">deploy guide ↗</a></label>
-        <input type="url" id="key-self" placeholder="https://your-server.railway.app" spellcheck="false" autocomplete="off" />
+        <label>Server URL <a href="https://github.com/imiladco/claude/tree/main/screenshot-server" target="_blank">docs ↗</a></label>
+        <input type="url" id="key-self" placeholder="http://localhost:3000" spellcheck="false" autocomplete="off" />
       </div>
       <div class="field">
         <label>Auth token <span class="pill">optional</span></label>
@@ -322,7 +322,7 @@
           <button class="secondary" data-save="self">Save</button>
         </div>
         <div class="key-status" id="status-self"></div>
-        <div class="hint">Best quality — handles lazy loading, animations, and accordions. Deploy free on Railway.</div>
+        <div class="hint">Run <b>start.bat</b> from the screenshot-server folder, then enter <b>http://localhost:3000</b> above. Token is optional for local use.</div>
       </div>
     </div>
 
@@ -375,7 +375,7 @@
 
   <!-- Footer -->
   <div class="footer">
-    <span class="version" id="version">v1.3.2</span>
+    <span class="version" id="version">v1.3.3</span>
     <div class="update-area">
       <span class="update-msg" id="updateMsg"></span>
       <button class="secondary" id="checkUpdate">Check for updates</button>
@@ -388,7 +388,7 @@
     /* ──────────────────────────────────────────────
        Constants
     ────────────────────────────────────────────── */
-    const CURRENT_VERSION = "1.3.2";
+    const CURRENT_VERSION = "1.3.3";
     const GITHUB_API = "https://api.github.com/repos/imiladco/claude/contents/figma-screenshot-plugin/ui.html";
     const KEY_PROVIDERS = ["self", "screenshotcore", "apiflash"];
     const FIGMA_MAX = 4096;                  // Max px per image dimension in Figma.
