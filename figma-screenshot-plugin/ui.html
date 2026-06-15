@@ -259,6 +259,17 @@
       background:var(--surface-2); border-bottom:1px solid var(--border);
       position:sticky; top:0; z-index:1;
     }
+    .link-site-hdr {
+      display:flex; align-items:center; justify-content:space-between;
+      padding:7px 10px 6px;
+      font-size:11px; font-weight:700; color:var(--text);
+      background:var(--surface-2); border-bottom:1px solid var(--border);
+      position:sticky; top:0; z-index:2;
+    }
+    .link-site-hdr .site-name { display:flex; align-items:center; gap:6px; }
+    .link-site-hdr .site-dot  { width:6px; height:6px; border-radius:50%; background:var(--accent); flex-shrink:0; }
+    .link-site-hdr .site-sel  { display:flex; gap:4px; }
+    .link-site-hdr .site-sel button { padding:2px 7px; font-size:9px; }
     .link-item {
       display:flex; align-items:flex-start; gap:9px;
       padding:8px 10px; cursor:pointer;
@@ -268,7 +279,7 @@
     .link-item:last-child { border-bottom:none; }
     .link-item:hover { background:var(--surface-2); }
     .link-item input[type=checkbox] { margin-top:2px; flex-shrink:0; accent-color:var(--accent); cursor:pointer; }
-    .link-item-body { display:flex; flex-direction:column; gap:2px; min-width:0; }
+    .link-item-body { display:flex; flex-direction:column; gap:2px; min-width:0; flex:1; overflow:hidden; }
     .link-text { font-size:12px; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
     .link-url  { font-size:10px; color:var(--text-3); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 
@@ -410,9 +421,24 @@
 
     <!-- Step 1: Scan -->
     <div id="bulk-step-scan">
-      <div class="field">
+
+      <!-- Mode toggle -->
+      <div class="layout-toggle" style="width:100%;margin-bottom:12px">
+        <button class="layout-btn active" id="modeSingle" style="flex:1" data-mode="single">Single site</button>
+        <button class="layout-btn"        id="modeMulti"  style="flex:1" data-mode="multi">Multiple sites</button>
+      </div>
+
+      <!-- Single site input -->
+      <div class="field" id="single-url-field">
         <label>Website URL</label>
         <input type="url" id="bulk-url" placeholder="https://example.com" spellcheck="false" autocomplete="off" list="urlHistory" />
+      </div>
+
+      <!-- Multi-site textarea -->
+      <div class="field" id="multi-url-field" style="display:none">
+        <label>URLs — one per line</label>
+        <textarea id="bulk-urls" rows="5" placeholder="https://site1.com&#10;https://site2.com&#10;https://site3.com" spellcheck="false"
+          style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-size:12px;font-family:inherit;padding:9px 11px;resize:vertical;outline:none;transition:border-color .15s"></textarea>
       </div>
 
       <div class="field" style="margin-top:12px">
@@ -568,7 +594,7 @@
 
   <!-- Footer -->
   <div class="footer">
-    <span class="version" id="version">v1.5.1</span>
+    <span class="version" id="version">v1.5.2</span>
     <div class="update-area">
       <span class="update-msg" id="updateMsg"></span>
       <button class="secondary" id="checkUpdate">Check for updates</button>
@@ -581,7 +607,7 @@
     /* ──────────────────────────────────────────────
        Constants
     ────────────────────────────────────────────── */
-    const CURRENT_VERSION = "1.5.1";
+    const CURRENT_VERSION = "1.5.2";
     const GITHUB_API = "https://api.github.com/repos/imiladco/claude/contents/figma-screenshot-plugin/ui.html";
     const KEY_PROVIDERS = ["self", "screenshotcore", "apiflash"];
     const FIGMA_MAX = 4096;                  // Max px per image dimension in Figma.
@@ -1101,6 +1127,7 @@
        BULK MODE
     ────────────────────────────────────────────── */
     let bulkLayout   = "vertical";
+    let bulkMode     = "single";
     let bulkAbort    = false;
     let crawledLinks = [];
 
@@ -1111,10 +1138,26 @@
         .replace(/>/g,"&gt;").replace(/"/g,"&quot;");
     }
 
-    /* Layout toggle */
-    document.querySelectorAll(".layout-btn").forEach(btn =>
+    /* Mode toggle */
+    $("modeSingle").addEventListener("click", () => {
+      bulkMode = "single";
+      $("modeSingle").classList.add("active");
+      $("modeMulti").classList.remove("active");
+      $("single-url-field").style.display = "";
+      $("multi-url-field").style.display = "none";
+    });
+    $("modeMulti").addEventListener("click", () => {
+      bulkMode = "multi";
+      $("modeMulti").classList.add("active");
+      $("modeSingle").classList.remove("active");
+      $("single-url-field").style.display = "none";
+      $("multi-url-field").style.display = "";
+    });
+
+    /* Layout toggle — only buttons with data-layout, not mode buttons */
+    document.querySelectorAll(".layout-btn[data-layout]").forEach(btn =>
       btn.addEventListener("click", () => {
-        document.querySelectorAll(".layout-btn").forEach(b => b.classList.remove("active"));
+        document.querySelectorAll(".layout-btn[data-layout]").forEach(b => b.classList.remove("active"));
         btn.classList.add("active");
         bulkLayout = btn.dataset.layout;
       })
@@ -1140,18 +1183,15 @@
 
     /* Sync bulk URL from capture tab and check server warning */
     function syncBulkUrl() {
-      const bu = $("bulk-url");
-      if (!bu.value && state.url) bu.value = state.url;
+      if (bulkMode === "single") {
+        const bu = $("bulk-url");
+        if (!bu.value && state.url) bu.value = state.url;
+      }
       $("bulk-warn").classList.toggle("show", !hasValidKey("self"));
     }
 
     /* Scan button */
     $("scanBtn").addEventListener("click", async () => {
-      const url = normalizeUrl($("bulk-url").value || urlInput.value);
-      if (!url) { setBulkStatus("error", "Please enter a valid URL."); return; }
-      $("bulk-url").value = url;
-      state.url = url; persist();
-
       if (!hasValidKey("self")) {
         setBulkStatus("error", "Self-hosted server required — configure in Settings.");
         activateTab("settings"); return;
@@ -1159,66 +1199,164 @@
 
       const serverBase = (state.keys["self"] || "http://localhost:3000").replace(/\/$/, "");
       const token      = state.secrets["self"] || "";
-
       $("scanBtn").disabled = true;
-      setBulkStatus("loading", "Scanning links…");
 
-      try {
-        let fetchUrl = serverBase + "/crawl?url=" + enc(url);
-        if (token) fetchUrl += "&token=" + enc(token);
-        const r = await fetch(fetchUrl);
-        if (!r.ok) {
-          const e = await r.json().catch(() => ({}));
-          throw new Error(e.error || "HTTP " + r.status);
-        }
-        const { links } = await r.json();
-        if (!links || links.length === 0) {
-          setBulkStatus("error", "No internal links found.");
+      if (bulkMode === "multi") {
+        const rawUrls = $("bulk-urls").value.split("\n")
+          .map(l => normalizeUrl(l.trim())).filter(Boolean);
+        if (rawUrls.length === 0) {
+          setBulkStatus("error", "Enter at least one valid URL, one per line.");
           $("scanBtn").disabled = false; return;
         }
-        crawledLinks = links;
-        setBulkStatus("", "");
-        renderLinkList(links);
+
+        let allLinks = [], errors = [];
+        for (let i = 0; i < rawUrls.length; i++) {
+          const url = rawUrls[i];
+          let hostname = url;
+          try { hostname = new URL(url).hostname; } catch(_) {}
+          setBulkStatus("loading", `Scanning ${i + 1}/${rawUrls.length}: ${hostname}…`);
+          try {
+            let fetchUrl = serverBase + "/crawl?url=" + enc(url);
+            if (token) fetchUrl += "&token=" + enc(token);
+            const r = await fetch(fetchUrl);
+            if (!r.ok) {
+              const e = await r.json().catch(() => ({}));
+              throw new Error(e.error || "HTTP " + r.status);
+            }
+            const { links } = await r.json();
+            const domain = hostname.replace(/^www\./, "");
+            (links || []).forEach(l => allLinks.push(Object.assign({}, l, { domain })));
+          } catch (err) {
+            errors.push(hostname + ": " + ((err && err.message) || "failed"));
+          }
+        }
+
+        if (allLinks.length === 0) {
+          setBulkStatus("error", errors.length
+            ? "All sites failed — " + errors[0] : "No links found.");
+          $("scanBtn").disabled = false; return;
+        }
+
+        crawledLinks = allLinks;
+        setBulkStatus(errors.length ? "error" : "",
+          errors.length ? errors.length + " site(s) failed to scan" : "");
+        renderLinkList(allLinks, "multi");
         showBulkStep("bulk-step-select");
-      } catch (err) {
-        const msg = (err && err.message) || "Scan failed.";
-        setBulkStatus("error",
-          /failed to fetch|networkerror|load failed/i.test(msg)
-            ? "Cannot reach server — is it running? Run start.bat first." : msg
-        );
-        $("scanBtn").disabled = false;
+
+      } else {
+        const url = normalizeUrl($("bulk-url").value || urlInput.value);
+        if (!url) { setBulkStatus("error", "Please enter a valid URL."); $("scanBtn").disabled = false; return; }
+        $("bulk-url").value = url;
+        state.url = url; persist();
+
+        setBulkStatus("loading", "Scanning links…");
+        try {
+          let fetchUrl = serverBase + "/crawl?url=" + enc(url);
+          if (token) fetchUrl += "&token=" + enc(token);
+          const r = await fetch(fetchUrl);
+          if (!r.ok) {
+            const e = await r.json().catch(() => ({}));
+            throw new Error(e.error || "HTTP " + r.status);
+          }
+          const { links } = await r.json();
+          if (!links || links.length === 0) {
+            setBulkStatus("error", "No internal links found.");
+            $("scanBtn").disabled = false; return;
+          }
+          crawledLinks = links;
+          setBulkStatus("", "");
+          renderLinkList(links, "single");
+          showBulkStep("bulk-step-select");
+        } catch (err) {
+          const msg = (err && err.message) || "Scan failed.";
+          setBulkStatus("error",
+            /failed to fetch|networkerror|load failed/i.test(msg)
+              ? "Cannot reach server — is it running? Run start.bat first." : msg
+          );
+          $("scanBtn").disabled = false;
+        }
       }
     });
 
-    function renderLinkList(links) {
+    function renderLinkList(links, mode) {
       const list = $("linkList");
       list.innerHTML = "";
       const order  = ["home","header","nav","footer","sitemap","body"];
       const labels = { home:"Home Page", header:"Header Nav", nav:"Navigation", footer:"Footer Links", sitemap:"Sitemap", body:"Page Links" };
 
-      order.forEach(section => {
-        const group = links.filter(l => l.section === section);
-        if (!group.length) return;
-        const hdr = document.createElement("div");
-        hdr.className = "link-section-hdr";
-        hdr.textContent = labels[section] || section;
-        list.appendChild(hdr);
+      function appendLinkItem(link, section, extraData) {
+        const item = document.createElement("label");
+        item.className = "link-item";
+        item.dataset.section = section;
+        item.dataset.href    = link.href;
+        if (extraData) Object.assign(item.dataset, extraData);
+        item.innerHTML = `
+          <input type="checkbox" class="link-cb" checked />
+          <div class="link-item-body">
+            <span class="link-text">${escHtml(link.text)}</span>
+            <span class="link-url">${escHtml(link.href)}</span>
+          </div>`;
+        item.querySelector(".link-cb").addEventListener("change", updateBulkCount);
+        list.appendChild(item);
+      }
 
-        group.forEach(link => {
-          const item = document.createElement("label");
-          item.className = "link-item";
-          item.dataset.section = section;
-          item.dataset.href    = link.href;
-          item.innerHTML = `
-            <input type="checkbox" class="link-cb" checked />
-            <div class="link-item-body">
-              <span class="link-text">${escHtml(link.text)}</span>
-              <span class="link-url">${escHtml(link.href)}</span>
-            </div>`;
-          item.querySelector(".link-cb").addEventListener("change", updateBulkCount);
-          list.appendChild(item);
+      if (mode === "multi") {
+        const domains = [], byDomain = {};
+        links.forEach(l => {
+          const d = l.domain || "unknown";
+          if (!byDomain[d]) { byDomain[d] = []; domains.push(d); }
+          byDomain[d].push(l);
         });
-      });
+
+        domains.forEach(domain => {
+          const domainLinks = byDomain[domain];
+          const siteHdr = document.createElement("div");
+          siteHdr.className = "link-site-hdr";
+          siteHdr.innerHTML = `
+            <div class="site-name">
+              <span class="site-dot"></span>
+              <span>${escHtml(domain)}</span>
+            </div>
+            <div class="site-sel">
+              <button class="secondary">All</button>
+              <button class="secondary">None</button>
+            </div>`;
+          const [allBtn, noneBtn] = siteHdr.querySelectorAll(".site-sel button");
+          allBtn.addEventListener("click", (e) => {
+            e.preventDefault();
+            list.querySelectorAll(`.link-item[data-domain="${domain}"] .link-cb`).forEach(c => c.checked = true);
+            updateBulkCount();
+          });
+          noneBtn.addEventListener("click", (e) => {
+            e.preventDefault();
+            list.querySelectorAll(`.link-item[data-domain="${domain}"] .link-cb`).forEach(c => c.checked = false);
+            updateBulkCount();
+          });
+          list.appendChild(siteHdr);
+
+          order.forEach(section => {
+            const group = domainLinks.filter(l => l.section === section);
+            if (!group.length) return;
+            const hdr = document.createElement("div");
+            hdr.className = "link-section-hdr";
+            hdr.textContent = labels[section] || section;
+            list.appendChild(hdr);
+            group.forEach(link => appendLinkItem(link, section, { domain }));
+          });
+        });
+
+      } else {
+        order.forEach(section => {
+          const group = links.filter(l => l.section === section);
+          if (!group.length) return;
+          const hdr = document.createElement("div");
+          hdr.className = "link-section-hdr";
+          hdr.textContent = labels[section] || section;
+          list.appendChild(hdr);
+          group.forEach(link => appendLinkItem(link, section));
+        });
+      }
+
       updateBulkCount();
       $("foundCount").textContent = links.length + " links found";
     }
@@ -1300,7 +1438,9 @@
       const spacing     = Math.max(0, parseInt($("bulkSpacing").value, 10) || 250);
       const radius      = Math.max(0, parseInt($("bulkRadius").value,  10) || 250);
       const concurrency = Math.max(1, parseInt($("bulkConcurrency").value, 10) || 3);
-      const baseUrl     = $("bulk-url").value || state.url;
+      const baseUrl = bulkMode === "multi"
+        ? (() => { const lines = $("bulk-urls").value.split("\n").map(l => normalizeUrl(l.trim())).filter(Boolean); return lines[0] || state.url; })()
+        : ($("bulk-url").value || state.url);
 
       /* Tell sandbox to create the Auto Layout container */
       parent.postMessage({ pluginMessage: {
