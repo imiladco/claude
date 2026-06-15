@@ -230,46 +230,39 @@
     .update-msg.err { color: var(--error); }
     #checkUpdate { padding: 5px 11px; font-size: 11px; }
 
-    /* ── Server status dot ──────────────────────── */
-    .server-status {
-      display: none;
-      align-items: center; gap: 6px;
-      font-size: 11px; color: var(--text-3);
-    }
-    .server-status.visible { display: flex; }
-    .status-dot {
-      width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0;
-      background: var(--text-3);
+    /* ── Server status dot ──────────────────────────────────────────── */
+    .provider-row { display: flex; align-items: center; gap: 8px; }
+    .provider-row select { flex: 1; }
+    .server-dot {
+      width: 8px; height: 8px; flex-shrink: 0;
+      border-radius: 50%; background: var(--text-3);
       transition: background .3s;
     }
-    .status-dot.online  { background: var(--success); }
-    .status-dot.offline { background: var(--error); }
+    .server-dot.online  { background: var(--success); }
+    .server-dot.offline { background: var(--error); }
 
-    /* ── Cancel + Re-capture ────────────────────── */
-    #cancelBtn {
-      display: none; width: 100%; margin-top: -4px;
-      padding: 7px 16px;
-      background: transparent;
+    /* ── URL history datalist ───────────────────────────────────────── */
+    input[list]::-webkit-calendar-picker-indicator { display: none; }
+
+    /* ── Cancel button ──────────────────────────────────────────────── */
+    .capture-row { display: flex; gap: 8px; }
+    .capture-row button.primary { flex: 1; }
+    button#cancelCapture {
+      padding: 11px 13px;
+      background: var(--surface-2);
       border: 1px solid var(--border);
       border-radius: var(--radius-sm);
-      color: var(--text-3); font-size: 12px; font-family: inherit;
-      cursor: pointer; transition: border-color .15s, color .15s;
-    }
-    #cancelBtn:hover { border-color: var(--error); color: var(--error); }
-    #cancelBtn.visible { display: block; }
-
-    #recaptureBtn {
+      color: var(--text-2);
+      font-size: 12px; font-family: inherit; font-weight: 500;
+      cursor: pointer;
+      transition: border-color .15s, color .15s;
       display: none;
-      width: 100%; margin-top: -4px;
-      padding: 7px 16px;
-      background: transparent;
-      border: 1px solid var(--border);
-      border-radius: var(--radius-sm);
-      color: var(--text-2); font-size: 12px; font-family: inherit;
-      cursor: pointer; transition: border-color .15s, color .15s;
     }
-    #recaptureBtn:hover { border-color: var(--accent); color: var(--accent); }
-    #recaptureBtn.visible { display: block; }
+    button#cancelCapture:hover { border-color: var(--error); color: var(--error); }
+    button#cancelCapture.visible { display: block; }
+
+    /* ── Re-capture link ────────────────────────────────────────────── */
+    .recapture { font-size: 11px; color: var(--accent); cursor: pointer; text-decoration: underline; }
   </style>
 </head>
 <body>
@@ -295,8 +288,8 @@
     <div class="field">
       <label>Website URL</label>
       <input type="url" id="url" placeholder="https://example.com" spellcheck="false" autocomplete="off" list="urlHistory" />
-      <datalist id="urlHistory"></datalist>
     </div>
+    <datalist id="urlHistory"></datalist>
 
     <div class="row">
       <div class="field">
@@ -322,33 +315,33 @@
 
     <div class="field">
       <label>Provider</label>
-      <select id="provider">
-        <option value="self">Self-hosted Playwright — Best quality</option>
-        <option value="microlink">microlink.io — Free</option>
-        <option value="thum">thum.io — Free</option>
-        <option value="screenshotcore">ScreenshotCore — API key</option>
-        <option value="apiflash">ApiFlash — API key</option>
-      </select>
+      <div class="provider-row">
+        <select id="provider">
+          <option value="self">Self-hosted Playwright — Best quality</option>
+          <option value="microlink">microlink.io — Free</option>
+          <option value="thum">thum.io — Free</option>
+          <option value="screenshotcore">ScreenshotCore — API key</option>
+          <option value="apiflash">ApiFlash — API key</option>
+        </select>
+        <span class="server-dot" id="serverDot" title="Server status"></span>
+      </div>
     </div>
 
     <div class="warn" id="warn">
       <b>Setup required.</b> Open <b>Settings</b> to configure this provider.
     </div>
 
-    <div class="server-status" id="serverStatus">
-      <span class="status-dot" id="serverDot"></span>
-      <span id="serverStatusText">Checking server…</span>
+    <div class="capture-row">
+      <button class="primary" id="capture">Capture full page</button>
+      <button id="cancelCapture" title="Cancel">✕</button>
     </div>
-
-    <button class="primary" id="capture">Capture full page</button>
-    <button id="cancelBtn">Cancel</button>
-    <button id="recaptureBtn">Capture again</button>
 
     <div class="status" id="status">
       <div class="status-inner">
         <span class="spinner" id="statusSpinner"></span>
         <span class="icon" id="statusIcon" style="display:none"></span>
         <span class="status-text" id="statusText"></span>
+        <span class="recapture" id="recapture" style="display:none">Capture again</span>
       </div>
     </div>
 
@@ -371,7 +364,7 @@
           <button class="secondary" data-save="self">Save</button>
         </div>
         <div class="key-status" id="status-self"></div>
-        <div class="hint">Run <b>start.bat</b> from the screenshot-server folder, then enter <b>http://localhost:3000</b> above. Token is optional for local use.</div>
+        <div class="hint">Run <b>install.bat</b> (Windows) or <b>install.sh</b> (Mac/Linux) from the screenshot-server folder, then enter <b>http://localhost:3000</b> above. Token is optional for local use.</div>
       </div>
     </div>
 
@@ -461,10 +454,9 @@
       provider: "microlink",
       keys:    { self: "", screenshotcore: "", apiflash: "" },
       secrets: { self: "", screenshotcore: "" },
-      urlHistory: []    // last 8 successful URLs
+      urlHistory: []
     };
     let ready = false;
-    let abortController = null;
 
     function persist() {
       if (!ready) return;
@@ -475,16 +467,17 @@
        Element refs
     ────────────────────────────────────────────── */
     const $ = (id) => document.getElementById(id);
-    const urlInput      = $("url"),       widthSel   = $("width"),
-          scaleSel      = $("scale"),     providerSel = $("provider"),
-          warn          = $("warn"),      captureBtn  = $("capture"),
-          cancelBtn     = $("cancelBtn"), recaptureBtn = $("recaptureBtn"),
-          statusEl      = $("status"),    statusText  = $("statusText"),
+    const urlInput   = $("url"),    widthSel = $("width"),
+          scaleSel   = $("scale"),  providerSel = $("provider"),
+          warn       = $("warn"),   captureBtn = $("capture"),
+          statusEl   = $("status"), statusText = $("statusText"),
           statusSpinner = $("statusSpinner"), statusIcon = $("statusIcon"),
-          updateBtn     = $("checkUpdate"), updateMsg  = $("updateMsg"),
-          serverStatus  = $("serverStatus"), serverDot = $("serverDot"),
-          serverStatusText = $("serverStatusText"),
-          urlHistoryEl  = $("urlHistory");
+          updateBtn  = $("checkUpdate"), updateMsg = $("updateMsg");
+
+    const cancelBtn      = $("cancelCapture");
+    const serverDot      = $("serverDot");
+    const recaptureEl    = $("recapture");
+    const urlHistoryList = $("urlHistory");
 
     $("version").textContent = "v" + CURRENT_VERSION;
 
@@ -508,7 +501,8 @@
     widthSel.addEventListener("change", () => { state.width = widthSel.value; persist(); });
     scaleSel.addEventListener("change", () => { state.scale = scaleSel.value; persist(); });
     providerSel.addEventListener("change", () => {
-      state.provider = providerSel.value; refreshWarning(); refreshServerStatus(); persist();
+      state.provider = providerSel.value; refreshWarning(); persist();
+      startHealthCheck();
     });
     warn.addEventListener("click", () => activateTab("settings"));
     urlInput.addEventListener("keydown", (e) => { if (e.key === "Enter") captureBtn.click(); });
@@ -516,60 +510,6 @@
     function refreshWarning() {
       const p = state.provider;
       warn.classList.toggle("show", KEY_PROVIDERS.includes(p) && !hasValidKey(p));
-    }
-
-    /* ── Server status dot (polls /health every 5s when self provider) ── */
-    let serverPollTimer = null;
-    function startServerPoll() {
-      stopServerPoll();
-      checkServerHealth();
-      serverPollTimer = setInterval(checkServerHealth, 5000);
-    }
-    function stopServerPoll() {
-      if (serverPollTimer) { clearInterval(serverPollTimer); serverPollTimer = null; }
-    }
-    async function checkServerHealth() {
-      const base = (state.keys["self"] || "http://localhost:3000").replace(/\/$/, "");
-      try {
-        const r = await fetch(base + "/health", { signal: AbortSignal.timeout(3000) });
-        const j = r.ok ? await r.json() : null;
-        if (j && j.ok) {
-          serverDot.className = "status-dot online";
-          serverStatusText.textContent = "Server online";
-        } else {
-          serverDot.className = "status-dot offline";
-          serverStatusText.textContent = "Server error";
-        }
-      } catch (_) {
-        serverDot.className = "status-dot offline";
-        serverStatusText.textContent = "Server offline — run start.bat";
-      }
-    }
-    function refreshServerStatus() {
-      if (state.provider === "self") {
-        serverStatus.classList.add("visible");
-        startServerPoll();
-      } else {
-        serverStatus.classList.remove("visible");
-        stopServerPoll();
-      }
-    }
-
-    /* ── URL history ────────────────────────────────────────────────── */
-    function pushUrlHistory(url) {
-      if (!url) return;
-      state.urlHistory = [url, ...(state.urlHistory || []).filter(u => u !== url)].slice(0, 8);
-      persist();
-      renderUrlHistory();
-    }
-    function renderUrlHistory() {
-      if (!urlHistoryEl) return;
-      urlHistoryEl.innerHTML = "";
-      (state.urlHistory || []).forEach(u => {
-        const opt = document.createElement("option");
-        opt.value = u;
-        urlHistoryEl.appendChild(opt);
-      });
     }
 
     /* ──────────────────────────────────────────────
@@ -586,6 +526,7 @@
         persist();
         renderKeyStatus(p);
         refreshWarning();
+        if (p === "self") startHealthCheck();
         b.textContent = "Saved";
         setTimeout(() => (b.textContent = "Save"), 1300);
       }));
@@ -629,6 +570,44 @@
     }
 
     /* ──────────────────────────────────────────────
+       URL history
+    ────────────────────────────────────────────── */
+    function addUrlToHistory(url) {
+      state.urlHistory = [url, ...(state.urlHistory || []).filter(u => u !== url)].slice(0, 8);
+      persist();
+      renderUrlHistory();
+    }
+    function renderUrlHistory() {
+      if (!urlHistoryList) return;
+      urlHistoryList.innerHTML = (state.urlHistory || [])
+        .map(u => `<option value="${u.replace(/"/g, "&quot;")}"></option>`).join("");
+    }
+
+    /* ──────────────────────────────────────────────
+       Server health check
+    ────────────────────────────────────────────── */
+    let healthTimer = null;
+    function startHealthCheck() {
+      if (healthTimer) clearInterval(healthTimer);
+      serverDot.style.display = "none";
+      if (state.provider !== "self" || !state.keys.self) return;
+      serverDot.style.display = "";
+      async function check() {
+        try {
+          const ctrl = new AbortController();
+          setTimeout(() => ctrl.abort(), 3000);
+          const r = await fetch(state.keys.self.replace(/\/$/, "") + "/health", { signal: ctrl.signal });
+          const j = await r.json();
+          serverDot.className = "server-dot " + (j.ok ? "online" : "offline");
+        } catch(_) {
+          serverDot.className = "server-dot offline";
+        }
+      }
+      check();
+      healthTimer = setInterval(check, 5000);
+    }
+
+    /* ──────────────────────────────────────────────
        Apply state to all controls (after load)
     ────────────────────────────────────────────── */
     function applyState() {
@@ -639,7 +618,6 @@
       syncSettingsInputs();
       KEY_PROVIDERS.forEach(renderKeyStatus);
       refreshWarning();
-      refreshServerStatus();
       renderUrlHistory();
     }
 
@@ -658,9 +636,6 @@
 
     /* ──────────────────────────────────────────────
        Request signing (ScreenshotCore HMAC-SHA256)
-       Canonical string = params (excluding access_key /
-       signature), sorted by key, PHP http_build_query
-       style (space → "+"), then HMAC-SHA256 → hex.
     ────────────────────────────────────────────── */
     function phpEncode(s) {
       return encodeURIComponent(s)
@@ -681,21 +656,16 @@
     }
 
     /* ──────────────────────────────────────────────
+       Abort support
+    ────────────────────────────────────────────── */
+    let currentAbort = null;
+    let abortSignal = null;
+
+    /* ──────────────────────────────────────────────
        Providers — each resolves to a single image Blob
     ────────────────────────────────────────────── */
-    async function fetchBlob(url, signal) {
-      let r;
-      try {
-        r = await fetch(url, signal ? { signal } : undefined);
-      } catch (err) {
-        if (err && err.name === "AbortError") throw err;
-        // Network-level failure — likely server not running
-        const msg = (err && err.message) || "";
-        if (/failed to fetch|networkerror|load failed/i.test(msg)) {
-          throw new Error("Cannot reach server — is it running? Run start.bat first.");
-        }
-        throw err;
-      }
+    async function fetchBlob(url) {
+      const r = await fetch(url, abortSignal ? { signal: abortSignal } : {});
       if (!r.ok) {
         let detail = "";
         try { detail = (await r.text()).slice(0, 160); } catch (_) {}
@@ -710,32 +680,32 @@
     }
 
     const PROVIDERS = {
-      self: (url, w, scale, serverUrl, token, signal) => {
+      self: (url, w, scale, serverUrl, token) => {
         const base = serverUrl.replace(/\/$/, "");
         let qs = "url=" + enc(url) + "&width=" + w + "&scale=" + scale;
         if (token) qs += "&token=" + enc(token);
-        return fetchBlob(base + "/screenshot?" + qs, signal);
+        return fetchBlob(base + "/screenshot?" + qs);
       },
 
-      microlink: async (url, w, scale, _k, _s, signal) => {
+      microlink: async (url, w, scale) => {
         const api =
           "https://api.microlink.io/?url=" + enc(url) +
           "&screenshot=true&meta=false&fullPage=true&type=png" +
           "&viewport.width=" + w + "&viewport.deviceScaleFactor=" + scale +
           "&disableAnimations=true&waitForTimeout=3500";
-        const r = await fetch(api, signal ? { signal } : undefined);
+        const r = await fetch(api, abortSignal ? { signal: abortSignal } : {});
         if (!r.ok) throw new Error("microlink HTTP " + r.status);
         const j = await r.json();
         const shot = j && j.data && j.data.screenshot && j.data.screenshot.url;
         if (j.status !== "success" || !shot)
           throw new Error(j.message || "microlink could not capture this URL.");
-        return fetchBlob(shot, signal);
+        return fetchBlob(shot);
       },
 
-      thum: (url, w, _scale, _k, _s, signal) =>
-        fetchBlob("https://image.thum.io/get/width/" + w + "/fullpage/noanimate/" + url, signal),
+      thum: (url, w) =>
+        fetchBlob("https://image.thum.io/get/width/" + w + "/fullpage/noanimate/" + url),
 
-      screenshotcore: async (url, w, scale, key, secret, signal) => {
+      screenshotcore: async (url, w, scale, key, secret) => {
         if (!key) throw new Error("ScreenshotCore: access key required (Settings).");
         if (!secret) throw new Error("ScreenshotCore: signing secret is required for browser calls. Add it in Settings.");
         const params = {
@@ -755,18 +725,17 @@
         const canonical = canonicalQuery(params);
         const sig = await hmacHex(secret, canonical);
         const qs = canonical + "&access_key=" + enc(key) + "&signature=" + sig;
-        return fetchBlob("https://screenshotcore.com/api/v1/screenshot?" + qs, signal);
+        return fetchBlob("https://screenshotcore.com/api/v1/screenshot?" + qs);
       },
 
-      apiflash: (url, w, scale, key, _s, signal) => {
+      apiflash: (url, w, scale, key) => {
         if (!key) throw new Error("ApiFlash access key required (Settings).");
         return fetchBlob(
           "https://api.apiflash.com/v1/urltoimage?access_key=" + enc(key) +
           "&url=" + enc(url) + "&width=" + w + "&scale_factor=" + scale +
           "&full_page=true&scroll_page=true&format=png" +
           "&no_cookie_banners=true&no_ads=true&no_tracking=true" +
-          "&wait_until=network_idle&delay=3",
-          signal
+          "&wait_until=network_idle&delay=3"
         );
       }
     };
@@ -822,11 +791,31 @@
     }
 
     /* ──────────────────────────────────────────────
+       Cancel button
+    ────────────────────────────────────────────── */
+    cancelBtn.addEventListener("click", () => {
+      if (currentAbort) currentAbort.abort();
+      currentAbort = null;
+      abortSignal = null;
+      cancelBtn.classList.remove("visible");
+      captureBtn.disabled = false;
+      setStatus("error", "Cancelled.");
+    });
+
+    recaptureEl.addEventListener("click", () => captureBtn.click());
+
+    /* ──────────────────────────────────────────────
        Capture flow
     ────────────────────────────────────────────── */
-    function doCapture(url) {
+    captureBtn.addEventListener("click", async () => {
+      const url = normalizeUrl(urlInput.value);
+      if (!url) { setStatus("error", "Please enter a valid URL."); return; }
+      urlInput.value = url;
+      state.url = url; persist();
+      addUrlToHistory(url);
+
       const provider = state.provider;
-      const key    = state.keys[provider] || "";
+      const key = state.keys[provider] || "";
       const secret = state.secrets[provider] || "";
       if (KEY_PROVIDERS.includes(provider) && !hasValidKey(provider)) {
         const msg = provider === "screenshotcore"
@@ -839,64 +828,44 @@
         return;
       }
 
-      const w     = parseInt(state.width, 10);
+      const w = parseInt(state.width, 10);
       const scale = parseInt(state.scale, 10);
       const label = providerSel.options[providerSel.selectedIndex].text.split(" —")[0];
 
-      captureBtn.disabled = true;
-      recaptureBtn.classList.remove("visible");
+      currentAbort = new AbortController();
+      abortSignal = currentAbort.signal;
       cancelBtn.classList.add("visible");
+      recaptureEl.style.display = "none";
+      captureBtn.disabled = true;
       setStatus("loading", "Capturing via " + label + "…");
 
-      abortController = new AbortController();
-      const signal = abortController.signal;
-
-      PROVIDERS[provider](url, w, scale, key, secret, signal).then(blob => {
+      try {
+        const blob = await PROVIDERS[provider](url, w, scale, key, secret);
         setStatus("loading", "Processing image…");
-        return buildTiles(blob, (i, n) => {
+        const { tiles, totalWidth, totalHeight } = await buildTiles(blob, (i, n) => {
           if (n > 1) setStatus("loading", "Slicing tile " + i + "/" + n + "…");
         });
-      }).then(({ tiles, totalWidth, totalHeight }) => {
         setStatus("loading", "Adding to canvas…");
         parent.postMessage({ pluginMessage: {
           type: "add-image", tiles, totalWidth, totalHeight, url
         } }, "*");
-      }).catch(err => {
-        cancelBtn.classList.remove("visible");
-        captureBtn.disabled = false;
-        if (err && err.name === "AbortError") {
-          setStatus("error", "Cancelled.");
-        } else {
-          setStatus("error", (err && err.message) ? err.message : "Capture failed.");
+      } catch (err) {
+        let msg = (err && err.message) ? err.message : "Capture failed.";
+        if (err && err.name === "AbortError") msg = "Cancelled.";
+        else if (msg.includes("Failed to fetch") || msg.includes("ERR_CONNECTION_REFUSED") || msg.includes("NetworkError")) {
+          if (state.provider === "self") msg = "Cannot reach server — is it running? Check http://localhost:3000/health";
+          else msg = "Connection failed — check your internet connection.";
         }
-      });
-    }
-
-    captureBtn.addEventListener("click", () => {
-      const url = normalizeUrl(urlInput.value);
-      if (!url) { setStatus("error", "Please enter a valid URL."); return; }
-      urlInput.value = url;
-      state.url = url; persist();
-      doCapture(url);
-    });
-
-    cancelBtn.addEventListener("click", () => {
-      if (abortController) { abortController.abort(); abortController = null; }
-      cancelBtn.classList.remove("visible");
-      captureBtn.disabled = false;
-    });
-
-    recaptureBtn.addEventListener("click", () => {
-      const url = normalizeUrl(urlInput.value) || state.url;
-      if (!url) return;
-      recaptureBtn.classList.remove("visible");
-      doCapture(url);
+        setStatus("error", msg);
+        captureBtn.disabled = false;
+        cancelBtn.classList.remove("visible");
+        currentAbort = null;
+        abortSignal = null;
+      }
     });
 
     /* ──────────────────────────────────────────────
-       Update check — fetch latest ui.html from GitHub,
-       hand it to the sandbox which persists it in
-       clientStorage and swaps the UI live.
+       Update check
     ────────────────────────────────────────────── */
     updateBtn.addEventListener("click", async () => {
       updateBtn.disabled = true;
@@ -950,52 +919,37 @@
         case "init":
           if (msg.settings) {
             Object.assign(state, msg.settings);
-            state.keys       = Object.assign({ self: "", screenshotcore: "", apiflash: "" }, msg.settings.keys);
-            state.secrets    = Object.assign({ self: "", screenshotcore: "" }, msg.settings.secrets);
+            state.keys    = Object.assign({ self: "", screenshotcore: "", apiflash: "" }, msg.settings.keys);
+            state.secrets = Object.assign({ self: "", screenshotcore: "" }, msg.settings.secrets);
             state.urlHistory = msg.settings.urlHistory || [];
           }
           ready = true;
           applyState();
-          // Auto-check for updates 3s after load
-          setTimeout(() => silentUpdateCheck(), 3000);
+          startHealthCheck();
           break;
         case "done":
-          cancelBtn.classList.remove("visible");
-          captureBtn.disabled = false;
-          recaptureBtn.classList.add("visible");
           setStatus("success", "Screenshot added to canvas.");
-          pushUrlHistory(state.url);
+          captureBtn.disabled = false;
+          cancelBtn.classList.remove("visible");
+          currentAbort = null;
+          abortSignal = null;
+          recaptureEl.style.display = "";
           break;
         case "error":
-          cancelBtn.classList.remove("visible");
           setStatus("error", msg.message || "Something went wrong.");
           captureBtn.disabled = false;
+          cancelBtn.classList.remove("visible");
+          currentAbort = null;
+          abortSignal = null;
           break;
       }
     };
 
-    /* Silently check for updates on load — only apply if newer, no UI noise. */
-    async function silentUpdateCheck() {
-      try {
-        const r = await fetch(GITHUB_API + "?t=" + Date.now(), {
-          headers: { Accept: "application/vnd.github.v3+json" }
-        });
-        if (!r.ok) return;
-        const j = await r.json();
-        const html = decodeURIComponent(escape(atob((j.content || "").replace(/\n/g, ""))));
-        const m = html.match(/CURRENT_VERSION\s*=\s*["']([^"']+)["']/);
-        if (!m) return;
-        const latest = m[1];
-        if (!versionGT(latest, CURRENT_VERSION)) return;
-        // New version available — show in footer and apply
-        updateMsg.className = "update-msg new";
-        updateMsg.textContent = "v" + latest + " available";
-        parent.postMessage({ pluginMessage: { type: "apply-update", version: latest, html } }, "*");
-      } catch (_) {}
-    }
-
     /* Ask the sandbox for saved settings. */
     parent.postMessage({ pluginMessage: { type: "ui-ready" } }, "*");
+
+    // Auto-check for updates 3 seconds after load
+    setTimeout(() => { if (updateBtn) updateBtn.click(); }, 3000);
   </script>
 </body>
 </html>
