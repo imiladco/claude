@@ -204,8 +204,67 @@ function inPageDismiss() {
     });
   });
 
-  // Final dismiss pass + freeze all animations so screenshot is fully rendered.
+  // Expand all accordion / disclosure / FAQ items so their content is visible.
+  console.log("Expanding accordions…");
+  await page.evaluate(() => {
+    // Click everything that looks like an accordion toggle.
+    const toggleSelectors = [
+      // ARIA patterns
+      "[aria-expanded='false']",
+      "[aria-controls]",
+      // Common class names
+      ".accordion-toggle", ".accordion-header", ".accordion-button",
+      ".faq-toggle", ".faq-question", ".faq-header",
+      "[class*='accordion'] [class*='toggle']",
+      "[class*='accordion'] [class*='header']",
+      "[class*='accordion'] [class*='title']",
+      "[class*='collapse-toggle']",
+      "[data-toggle='collapse']",
+      "[data-bs-toggle='collapse']", // Bootstrap
+    ];
+    toggleSelectors.forEach((sel) => {
+      document.querySelectorAll(sel).forEach((el) => {
+        try { el.click(); } catch (_) {}
+      });
+    });
+  });
+  await page.waitForTimeout(600);
+
+  // Force all scroll-animated elements to their final visible state.
+  // Covers AOS, ScrollReveal, GSAP, WOW.js, Animate.css, custom CSS transitions.
+  console.log("Forcing animated elements to final state…");
+  await page.evaluate(() => {
+    // Common animation library classes that hide elements pre-scroll.
+    const animClasses = [
+      "aos-animate", "animated", "wow", "is-visible",
+      "is-inview", "in-view", "entered", "revealed",
+    ];
+    document.querySelectorAll("*").forEach((el) => {
+      try {
+        const s = window.getComputedStyle(el);
+        const hidden =
+          parseFloat(s.opacity) < 0.5 ||
+          s.visibility === "hidden" ||
+          (s.transform !== "none" && s.transform !== "matrix(1, 0, 0, 1, 0, 0)");
+        if (hidden) {
+          // Only force-show if element has content (not a wrapper with 0 size).
+          const r = el.getBoundingClientRect();
+          if (r.width > 0 || el.children.length > 0) {
+            animClasses.forEach((c) => el.classList.add(c));
+            el.style.setProperty("opacity", "1", "important");
+            el.style.setProperty("visibility", "visible", "important");
+            el.style.setProperty("transform", "none", "important");
+          }
+        }
+      } catch (_) {}
+    });
+  });
+  await page.waitForTimeout(500);
+
+  // Dismiss any overlays revealed by accordion expansion.
   await page.evaluate(inPageDismiss);
+
+  // Freeze all ongoing animations so the screenshot captures the final frame.
   await page.evaluate(() => {
     const style = document.createElement("style");
     style.textContent = `
@@ -218,7 +277,7 @@ function inPageDismiss() {
     `;
     document.head.appendChild(style);
   });
-  await page.waitForTimeout(800);
+  await page.waitForTimeout(600);
 
   // Screenshot.
   const filename = "screenshot-" + new URL(url).hostname.replace(/^www\./, "") + ".png";
