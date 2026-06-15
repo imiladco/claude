@@ -11,7 +11,7 @@
 
 "use strict";
 
-const BASE_VERSION = "1.5.0";          // Must match CURRENT_VERSION in ui.html.
+const BASE_VERSION = "1.5.1";          // Must match CURRENT_VERSION in ui.html.
 const STORE_KEY    = "ws:settings";    // clientStorage: user settings + keys.
 const UI_CACHE_KEY = "ws:ui-cache";    // clientStorage: { version, html }.
 const WINDOW = { width: 380, height: 560, title: "Website Screenshot" };
@@ -149,15 +149,16 @@ async function addImage(msg) {
 let bulkFrame = null;
 
 async function startBulk(msg) {
-  const name = siteName(msg.url);
+  const name    = siteName(msg.url);
+  const spacing = Math.max(0, msg.gap || msg.padding || 250);
   bulkFrame = figma.createFrame();
   bulkFrame.name = name;
   bulkFrame.layoutMode = msg.layout === "horizontal" ? "HORIZONTAL" : "VERTICAL";
   bulkFrame.primaryAxisSizingMode = "AUTO";
   bulkFrame.counterAxisSizingMode = "AUTO";
-  bulkFrame.itemSpacing = msg.gap || 40;
-  bulkFrame.paddingLeft = bulkFrame.paddingRight  = 40;
-  bulkFrame.paddingTop  = bulkFrame.paddingBottom = 40;
+  bulkFrame.itemSpacing = spacing;
+  bulkFrame.paddingLeft = bulkFrame.paddingRight  = spacing;
+  bulkFrame.paddingTop  = bulkFrame.paddingBottom = spacing;
   bulkFrame.fills = [{ type: "SOLID", color: { r: 0.09, g: 0.09, b: 0.09 } }];
 
   const c = figma.viewport.center;
@@ -170,7 +171,7 @@ async function startBulk(msg) {
 
 async function addBulkPage(msg) {
   if (!bulkFrame) return;
-  const { tiles, totalWidth, totalHeight, url, title } = msg;
+  const { tiles, totalWidth, totalHeight, url, title, radius } = msg;
   const label = title || siteName(url);
 
   // Child frame: screenshot + text label, vertical auto layout
@@ -181,6 +182,7 @@ async function addBulkPage(msg) {
   pageFrame.counterAxisSizingMode = "AUTO";
   pageFrame.itemSpacing = 12;
   pageFrame.fills = [];
+  if (radius > 0) { pageFrame.cornerRadius = radius; pageFrame.clipsContent = true; }
 
   const shot = await assembleTiles(tiles, totalWidth, totalHeight, label);
   pageFrame.appendChild(shot);

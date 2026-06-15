@@ -422,11 +422,26 @@
             <button class="layout-btn active" data-layout="vertical">↕ Vertical</button>
             <button class="layout-btn" data-layout="horizontal">↔ Horizontal</button>
           </div>
-          <select id="bulkGap" style="flex:1">
-            <option value="24">Gap 24 px</option>
-            <option value="40" selected>Gap 40 px</option>
-            <option value="60">Gap 60 px</option>
-            <option value="80">Gap 80 px</option>
+        </div>
+      </div>
+
+      <div class="row" style="margin-top:10px">
+        <div class="field">
+          <label>Spacing (gap + padding)</label>
+          <input type="number" id="bulkSpacing" value="250" min="0" max="1000" step="10" style="text-align:center" />
+        </div>
+        <div class="field">
+          <label>Corner radius</label>
+          <input type="number" id="bulkRadius" value="250" min="0" max="1000" step="10" style="text-align:center" />
+        </div>
+        <div class="field">
+          <label>Concurrent</label>
+          <select id="bulkConcurrency">
+            <option value="1">1×</option>
+            <option value="2">2×</option>
+            <option value="3" selected>3×</option>
+            <option value="4">4×</option>
+            <option value="5">5×</option>
           </select>
         </div>
       </div>
@@ -553,7 +568,7 @@
 
   <!-- Footer -->
   <div class="footer">
-    <span class="version" id="version">v1.5.0</span>
+    <span class="version" id="version">v1.5.1</span>
     <div class="update-area">
       <span class="update-msg" id="updateMsg"></span>
       <button class="secondary" id="checkUpdate">Check for updates</button>
@@ -566,7 +581,7 @@
     /* ──────────────────────────────────────────────
        Constants
     ────────────────────────────────────────────── */
-    const CURRENT_VERSION = "1.5.0";
+    const CURRENT_VERSION = "1.5.1";
     const GITHUB_API = "https://api.github.com/repos/imiladco/claude/contents/figma-screenshot-plugin/ui.html";
     const KEY_PROVIDERS = ["self", "screenshotcore", "apiflash"];
     const FIGMA_MAX = 4096;                  // Max px per image dimension in Figma.
@@ -1268,70 +1283,111 @@
       });
     }
 
-    /* Bulk capture flow */
+    /* Bulk capture flow — concurrent fetch, sequential Figma add */
     async function startBulkCapture(selected) {
       bulkAbort = false;
       showBulkStep("bulk-step-progress");
-      $("progressFill").style.width = "0%";
-      $("progressLog").innerHTML    = "";
+      $("progressFill").style.width  = "0%";
+      $("progressLog").innerHTML     = "";
       $("progressLabel").textContent = "Preparing…";
-      $("bulkCancelBtn").disabled   = false;
+      $("bulkCancelBtn").disabled    = false;
       $("bulkDoneBtn").style.display = "none";
 
-      const serverBase = (state.keys["self"] || "http://localhost:3000").replace(/\/$/, "");
-      const token      = state.secrets["self"] || "";
-      const w          = parseInt(state.width,  10) || 1440;
-      const scale      = parseInt(state.scale,  10) || 2;
-      const gap        = parseInt($("bulkGap").value, 10) || 40;
-      const baseUrl    = $("bulk-url").value || state.url;
+      const serverBase  = (state.keys["self"] || "http://localhost:3000").replace(/\/$/, "");
+      const token       = state.secrets["self"] || "";
+      const w           = parseInt(state.width, 10) || 1440;
+      const scale       = parseInt(state.scale, 10) || 2;
+      const spacing     = Math.max(0, parseInt($("bulkSpacing").value, 10) || 250);
+      const radius      = Math.max(0, parseInt($("bulkRadius").value,  10) || 250);
+      const concurrency = Math.max(1, parseInt($("bulkConcurrency").value, 10) || 3);
+      const baseUrl     = $("bulk-url").value || state.url;
 
-      /* Ask sandbox to create the container Auto Layout frame */
-      parent.postMessage({ pluginMessage: { type:"start-bulk", url:baseUrl, layout:bulkLayout, gap } }, "*");
+      /* Tell sandbox to create the Auto Layout container */
+      parent.postMessage({ pluginMessage: {
+        type:"start-bulk", url:baseUrl, layout:bulkLayout,
+        gap:spacing, padding:spacing, radius
+      } }, "*");
       await waitForSandbox("bulk-started");
 
-      let done = 0, failed = 0;
+      let done = 0, failed = 0, fetched = 0;
+      const total = selected.length;
 
-      for (let i = 0; i < selected.length; i++) {
-        if (bulkAbort) break;
-        const { href, text } = selected[i];
+      // captured[i] = {ok, tiles?, totalWidth?, totalHeight?, href, text, error?} | null
+      const captured = new Array(total).fill(null);
+      let nextFetch  = 0;  // index of next item to fetch
+      let nextAdd    = 0;  // index of next item to add to Figma
+      let addLock    = Promise.resolve(); // ensures sequential Figma adds
 
-        $("progressLabel").textContent = `${i + 1}/${selected.length} — ${text}`;
-        $("progressFill").style.width = ((i / selected.length) * 100).toFixed(1) + "%";
+      function updateProgress() {
+        const pct = Math.min(100, Math.round((fetched / total) * 100));
+        $("progressFill").style.width  = pct + "%";
+        $("progressLabel").textContent = `Fetching ${fetched}/${total}…`;
+      }
 
-        try {
-          let qs = "url=" + enc(href) + "&width=" + w + "&scale=" + scale;
-          if (token) qs += "&token=" + enc(token);
-          const r = await fetch(serverBase + "/screenshot?" + qs);
-          if (!r.ok) throw new Error("HTTP " + r.status);
-          const blob = await r.blob();
-          if (!blob.type.startsWith("image/")) throw new Error("Not an image");
+      async function drainFigma() {
+        addLock = addLock.then(async () => {
+          while (nextAdd < total && captured[nextAdd] !== null) {
+            const item = captured[nextAdd++];
+            if (item.ok) {
+              parent.postMessage({ pluginMessage: {
+                type:"add-bulk-page", tiles:item.tiles,
+                totalWidth:item.totalWidth, totalHeight:item.totalHeight,
+                url:item.href, title:item.text, radius
+              } }, "*");
+              await waitForSandbox("bulk-page-added");
+              done++;
+              addUrlToHistory(item.href);
+              addBulkLog("ok", item.text);
+            } else {
+              failed++;
+              addBulkLog("err", item.text + " — " + (item.error || "failed"));
+            }
+          }
+        });
+        await addLock;
+      }
 
-          const { tiles, totalWidth, totalHeight } = await buildTiles(blob);
-
-          parent.postMessage({ pluginMessage: {
-            type:"add-bulk-page", tiles, totalWidth, totalHeight, url:href, title:text
-          } }, "*");
-          await waitForSandbox("bulk-page-added");
-
-          done++;
-          pushUrlHistory(href);
-          addBulkLog("ok", text);
-        } catch (err) {
-          failed++;
-          addBulkLog("err", text + " — " + ((err && err.message) || "failed"));
+      async function fetchWorker() {
+        while (true) {
+          if (bulkAbort) break;
+          const idx = nextFetch++;
+          if (idx >= total) break;
+          const { href, text } = selected[idx];
+          try {
+            let qs = "url=" + enc(href) + "&width=" + w + "&scale=" + scale;
+            if (token) qs += "&token=" + enc(token);
+            const r = await fetch(serverBase + "/screenshot?" + qs);
+            if (!r.ok) throw new Error("HTTP " + r.status);
+            const blob = await r.blob();
+            if (!blob.type.startsWith("image/")) throw new Error("Not an image");
+            const { tiles, totalWidth, totalHeight } = await buildTiles(blob);
+            captured[idx] = { ok:true, tiles, totalWidth, totalHeight, href, text };
+          } catch (err) {
+            captured[idx] = { ok:false, href, text, error:(err && err.message) || "failed" };
+          }
+          fetched++;
+          updateProgress();
+          drainFigma(); // non-blocking — starts drain in background
         }
       }
+
+      // Launch N concurrent fetch workers
+      await Promise.all(
+        Array.from({ length: Math.min(concurrency, total) }, fetchWorker)
+      );
+      // Final drain to catch any remaining items
+      await drainFigma();
 
       $("progressFill").style.width  = "100%";
       $("progressLabel").textContent = bulkAbort
         ? `Stopped — ${done} added${failed ? ", " + failed + " failed" : ""}`
-        : `Done — ${done}/${done + failed} captured${failed ? ` (${failed} failed)` : ""}`;
+        : `Done — ${done}/${total} captured${failed ? ` (${failed} failed)` : ""}`;
 
       parent.postMessage({ pluginMessage: { type:"finish-bulk", count:done } }, "*");
       await waitForSandbox("bulk-done");
 
-      $("bulkCancelBtn").disabled     = true;
-      $("bulkDoneBtn").style.display  = "";
+      $("bulkCancelBtn").disabled    = true;
+      $("bulkDoneBtn").style.display = "";
     }
 
     function addBulkLog(type, text) {
