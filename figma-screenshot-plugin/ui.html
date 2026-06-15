@@ -230,6 +230,62 @@
     .update-msg.err { color: var(--error); }
     #checkUpdate { padding: 5px 11px; font-size: 11px; }
 
+    /* ── Bulk tab ───────────────────────────────── */
+    .bulk-toolbar { display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap; }
+    .found-count  { font-size:11px; color:var(--text-3); }
+    .bulk-sel-btns { display:flex; gap:4px; flex-wrap:wrap; }
+    .bulk-sel-btns button { padding:4px 9px; font-size:10px; }
+
+    .layout-toggle { display:flex; border:1px solid var(--border); border-radius:var(--radius-sm); overflow:hidden; }
+    .layout-btn {
+      padding:7px 13px; font-size:11px; font-family:inherit; cursor:pointer;
+      background:var(--surface); color:var(--text-3); border:none;
+      transition:background .15s, color .15s;
+    }
+    .layout-btn.active { background:var(--accent); color:#fff; }
+
+    .link-list {
+      display:flex; flex-direction:column; gap:0;
+      max-height:240px; overflow-y:auto;
+      border:1px solid var(--border); border-radius:var(--radius-sm);
+      background:var(--surface);
+    }
+    .link-list::-webkit-scrollbar { width:7px; }
+    .link-list::-webkit-scrollbar-thumb { background:var(--border); border-radius:4px; }
+    .link-section-hdr {
+      padding:5px 10px 4px;
+      font-size:9px; font-weight:700; color:var(--text-3);
+      text-transform:uppercase; letter-spacing:.06em;
+      background:var(--surface-2); border-bottom:1px solid var(--border);
+      position:sticky; top:0; z-index:1;
+    }
+    .link-item {
+      display:flex; align-items:flex-start; gap:9px;
+      padding:8px 10px; cursor:pointer;
+      border-bottom:1px solid var(--border);
+      transition:background .1s;
+    }
+    .link-item:last-child { border-bottom:none; }
+    .link-item:hover { background:var(--surface-2); }
+    .link-item input[type=checkbox] { margin-top:2px; flex-shrink:0; accent-color:var(--accent); cursor:pointer; }
+    .link-item-body { display:flex; flex-direction:column; gap:2px; min-width:0; }
+    .link-text { font-size:12px; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .link-url  { font-size:10px; color:var(--text-3); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+
+    .progress-wrap { display:flex; flex-direction:column; gap:12px; }
+    .progress-header { display:flex; align-items:center; justify-content:space-between; }
+    .progress-label  { font-size:12px; color:var(--text-2); flex:1; min-width:0; margin-right:8px; }
+    .progress-bar  { height:5px; background:var(--surface-2); border-radius:3px; overflow:hidden; }
+    .progress-fill { height:100%; background:var(--accent); border-radius:3px; transition:width .3s ease; width:0%; }
+    .progress-log  { max-height:150px; overflow-y:auto; display:flex; flex-direction:column; gap:2px; }
+    .progress-log::-webkit-scrollbar { width:7px; }
+    .progress-log::-webkit-scrollbar-thumb { background:var(--border); border-radius:4px; }
+    .log-entry { font-size:11px; display:flex; align-items:center; gap:6px; padding:2px 0; }
+    .log-entry .log-icon { flex-shrink:0; }
+    .log-entry.ok  .log-icon { color:var(--success); }
+    .log-entry.err .log-icon { color:var(--error); }
+    .log-entry .log-text { color:var(--text-3); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+
     /* ── Server status dot ──────────────────────────────────────────── */
     .provider-row { display: flex; align-items: center; gap: 8px; }
     .provider-row select { flex: 1; }
@@ -280,6 +336,7 @@
   <!-- Tabs -->
   <div class="tabs">
     <div class="tab active" data-tab="capture">Capture</div>
+    <div class="tab" data-tab="bulk">Bulk</div>
     <div class="tab" data-tab="settings">Settings</div>
   </div>
 
@@ -346,6 +403,85 @@
     </div>
 
     <p class="hint">Captures the whole page top to bottom. Ads, cookie banners and chat widgets are blocked automatically. Very tall pages are tiled to stay within Figma's image limits and grouped into one frame.</p>
+  </div>
+
+  <!-- Bulk panel -->
+  <div class="panel" id="panel-bulk">
+
+    <!-- Step 1: Scan -->
+    <div id="bulk-step-scan">
+      <div class="field">
+        <label>Website URL</label>
+        <input type="url" id="bulk-url" placeholder="https://example.com" spellcheck="false" autocomplete="off" list="urlHistory" />
+      </div>
+
+      <div class="field" style="margin-top:12px">
+        <label>Figma layout</label>
+        <div style="display:flex;gap:10px;align-items:center">
+          <div class="layout-toggle">
+            <button class="layout-btn active" data-layout="vertical">↕ Vertical</button>
+            <button class="layout-btn" data-layout="horizontal">↔ Horizontal</button>
+          </div>
+          <select id="bulkGap" style="flex:1">
+            <option value="24">Gap 24 px</option>
+            <option value="40" selected>Gap 40 px</option>
+            <option value="60">Gap 60 px</option>
+            <option value="80">Gap 80 px</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="warn" id="bulk-warn" style="margin-top:12px">
+        <b>Self-hosted server required.</b> Set the URL in <b>Settings → Self-hosted Playwright</b>.
+      </div>
+
+      <button class="primary" id="scanBtn" style="margin-top:12px">Scan site links</button>
+
+      <div class="status" id="bulk-status" style="margin-top:10px">
+        <div class="status-inner">
+          <span class="spinner" id="bulkSpinner"></span>
+          <span class="icon"   id="bulkIcon" style="display:none"></span>
+          <span class="status-text" id="bulkStatusText"></span>
+        </div>
+      </div>
+
+      <p class="hint" style="margin-top:8px">Crawls header, nav and footer links from the page, plus sitemap.xml if available. Select pages to capture in bulk.</p>
+    </div>
+
+    <!-- Step 2: Select links -->
+    <div id="bulk-step-select" style="display:none">
+      <div class="bulk-toolbar">
+        <span class="found-count" id="foundCount"></span>
+        <div class="bulk-sel-btns">
+          <button class="secondary" id="selAll">All</button>
+          <button class="secondary" id="selNone">None</button>
+          <button class="secondary" id="selHeader">Header</button>
+          <button class="secondary" id="selNav">Nav</button>
+          <button class="secondary" id="selFooter">Footer</button>
+        </div>
+      </div>
+
+      <div class="link-list" id="linkList" style="margin-top:10px"></div>
+
+      <div style="display:flex;gap:8px;margin-top:12px">
+        <button class="secondary" id="backScanBtn">← Back</button>
+        <button class="primary" id="bulkCaptureBtn" disabled style="flex:1">Capture selected (0)</button>
+      </div>
+    </div>
+
+    <!-- Step 3: Progress -->
+    <div id="bulk-step-progress" style="display:none">
+      <div class="progress-wrap">
+        <div class="progress-header">
+          <span class="progress-label" id="progressLabel">Preparing…</span>
+          <button class="secondary" id="bulkCancelBtn" style="padding:5px 10px;font-size:11px;flex-shrink:0">Cancel</button>
+        </div>
+        <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+        <div class="progress-log" id="progressLog"></div>
+      </div>
+      <button class="primary" id="bulkDoneBtn" style="display:none;margin-top:14px">View in Figma ↗</button>
+    </div>
+
   </div>
 
   <!-- Settings panel -->
@@ -417,7 +553,7 @@
 
   <!-- Footer -->
   <div class="footer">
-    <span class="version" id="version">v1.4.0</span>
+    <span class="version" id="version">v1.5.0</span>
     <div class="update-area">
       <span class="update-msg" id="updateMsg"></span>
       <button class="secondary" id="checkUpdate">Check for updates</button>
@@ -430,7 +566,7 @@
     /* ──────────────────────────────────────────────
        Constants
     ────────────────────────────────────────────── */
-    const CURRENT_VERSION = "1.4.0";
+    const CURRENT_VERSION = "1.5.0";
     const GITHUB_API = "https://api.github.com/repos/imiladco/claude/contents/figma-screenshot-plugin/ui.html";
     const KEY_PROVIDERS = ["self", "screenshotcore", "apiflash"];
     const FIGMA_MAX = 4096;                  // Max px per image dimension in Figma.
@@ -492,6 +628,7 @@
         x.classList.toggle("active", x.dataset.tab === name));
       document.querySelectorAll(".panel").forEach((x) =>
         x.classList.toggle("active", x.id === "panel-" + name));
+      if (name === "bulk") syncBulkUrl();
     }
 
     /* ──────────────────────────────────────────────
@@ -944,6 +1081,267 @@
           break;
       }
     };
+
+    /* ──────────────────────────────────────────────
+       BULK MODE
+    ────────────────────────────────────────────── */
+    let bulkLayout   = "vertical";
+    let bulkAbort    = false;
+    let crawledLinks = [];
+
+    /* Helper: escape HTML */
+    function escHtml(s) {
+      return String(s)
+        .replace(/&/g,"&amp;").replace(/</g,"&lt;")
+        .replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+    }
+
+    /* Layout toggle */
+    document.querySelectorAll(".layout-btn").forEach(btn =>
+      btn.addEventListener("click", () => {
+        document.querySelectorAll(".layout-btn").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        bulkLayout = btn.dataset.layout;
+      })
+    );
+
+    /* Show the correct step in bulk panel */
+    function showBulkStep(id) {
+      ["bulk-step-scan","bulk-step-select","bulk-step-progress"].forEach(s =>
+        $(s).style.display = s === id ? "" : "none"
+      );
+    }
+
+    /* Bulk status helper */
+    function setBulkStatus(type, msg) {
+      const el = $("bulk-status");
+      el.className = "status " + (type || "");
+      $("bulkStatusText").textContent = msg;
+      const loading = type === "loading";
+      $("bulkSpinner").style.display = loading ? "" : "none";
+      $("bulkIcon").style.display    = loading ? "none" : "";
+      $("bulkIcon").textContent      = type === "error" ? "✕" : type === "success" ? "✓" : "";
+    }
+
+    /* Sync bulk URL from capture tab and check server warning */
+    function syncBulkUrl() {
+      const bu = $("bulk-url");
+      if (!bu.value && state.url) bu.value = state.url;
+      $("bulk-warn").classList.toggle("show", !hasValidKey("self"));
+    }
+
+    /* Scan button */
+    $("scanBtn").addEventListener("click", async () => {
+      const url = normalizeUrl($("bulk-url").value || urlInput.value);
+      if (!url) { setBulkStatus("error", "Please enter a valid URL."); return; }
+      $("bulk-url").value = url;
+      state.url = url; persist();
+
+      if (!hasValidKey("self")) {
+        setBulkStatus("error", "Self-hosted server required — configure in Settings.");
+        activateTab("settings"); return;
+      }
+
+      const serverBase = (state.keys["self"] || "http://localhost:3000").replace(/\/$/, "");
+      const token      = state.secrets["self"] || "";
+
+      $("scanBtn").disabled = true;
+      setBulkStatus("loading", "Scanning links…");
+
+      try {
+        let fetchUrl = serverBase + "/crawl?url=" + enc(url);
+        if (token) fetchUrl += "&token=" + enc(token);
+        const r = await fetch(fetchUrl);
+        if (!r.ok) {
+          const e = await r.json().catch(() => ({}));
+          throw new Error(e.error || "HTTP " + r.status);
+        }
+        const { links } = await r.json();
+        if (!links || links.length === 0) {
+          setBulkStatus("error", "No internal links found.");
+          $("scanBtn").disabled = false; return;
+        }
+        crawledLinks = links;
+        setBulkStatus("", "");
+        renderLinkList(links);
+        showBulkStep("bulk-step-select");
+      } catch (err) {
+        const msg = (err && err.message) || "Scan failed.";
+        setBulkStatus("error",
+          /failed to fetch|networkerror|load failed/i.test(msg)
+            ? "Cannot reach server — is it running? Run start.bat first." : msg
+        );
+        $("scanBtn").disabled = false;
+      }
+    });
+
+    function renderLinkList(links) {
+      const list = $("linkList");
+      list.innerHTML = "";
+      const order  = ["header","nav","footer","sitemap","body"];
+      const labels = { header:"Header Nav", nav:"Navigation", footer:"Footer Links", sitemap:"Sitemap", body:"Page Links" };
+
+      order.forEach(section => {
+        const group = links.filter(l => l.section === section);
+        if (!group.length) return;
+        const hdr = document.createElement("div");
+        hdr.className = "link-section-hdr";
+        hdr.textContent = labels[section] || section;
+        list.appendChild(hdr);
+
+        group.forEach(link => {
+          const item = document.createElement("label");
+          item.className = "link-item";
+          item.dataset.section = section;
+          item.dataset.href    = link.href;
+          item.innerHTML = `
+            <input type="checkbox" class="link-cb" checked />
+            <div class="link-item-body">
+              <span class="link-text">${escHtml(link.text)}</span>
+              <span class="link-url">${escHtml(link.href)}</span>
+            </div>`;
+          item.querySelector(".link-cb").addEventListener("change", updateBulkCount);
+          list.appendChild(item);
+        });
+      });
+      updateBulkCount();
+      $("foundCount").textContent = links.length + " links found";
+    }
+
+    function getCheckedLinks() {
+      return [...document.querySelectorAll(".link-cb:checked")].map(cb => {
+        const item = cb.closest(".link-item");
+        return { href: item.dataset.href, text: item.querySelector(".link-text").textContent };
+      });
+    }
+
+    function updateBulkCount() {
+      const n = getCheckedLinks().length;
+      $("bulkCaptureBtn").textContent = "Capture selected (" + n + ")";
+      $("bulkCaptureBtn").disabled    = n === 0;
+    }
+
+    /* Select-filter buttons */
+    $("selAll").addEventListener("click",    () => { document.querySelectorAll(".link-cb").forEach(c=>c.checked=true);  updateBulkCount(); });
+    $("selNone").addEventListener("click",   () => { document.querySelectorAll(".link-cb").forEach(c=>c.checked=false); updateBulkCount(); });
+    ["Header","Nav","Footer"].forEach(s =>
+      $("sel" + s).addEventListener("click", () => {
+        document.querySelectorAll(".link-cb").forEach(c => c.checked = false);
+        document.querySelectorAll(`.link-item[data-section="${s.toLowerCase()}"] .link-cb`).forEach(c => c.checked = true);
+        updateBulkCount();
+      })
+    );
+
+    $("backScanBtn").addEventListener("click", () => {
+      showBulkStep("bulk-step-scan");
+      $("scanBtn").disabled = false;
+    });
+
+    $("bulkCaptureBtn").addEventListener("click", () => {
+      const selected = getCheckedLinks();
+      if (selected.length) startBulkCapture(selected);
+    });
+
+    $("bulkCancelBtn").addEventListener("click", () => {
+      bulkAbort = true;
+      $("bulkCancelBtn").disabled = true;
+      $("progressLabel").textContent = "Cancelling…";
+      parent.postMessage({ pluginMessage: { type: "cancel-bulk" } }, "*");
+    });
+
+    $("bulkDoneBtn").addEventListener("click", () => {
+      showBulkStep("bulk-step-scan");
+      $("scanBtn").disabled = false;
+    });
+
+    /* One-shot message waiter — resolves when sandbox sends { type } */
+    function waitForSandbox(type) {
+      return new Promise(resolve => {
+        const handler = e => {
+          const msg = e.data && e.data.pluginMessage;
+          if (msg && msg.type === type) {
+            window.removeEventListener("message", handler);
+            resolve(msg);
+          }
+        };
+        window.addEventListener("message", handler);
+      });
+    }
+
+    /* Bulk capture flow */
+    async function startBulkCapture(selected) {
+      bulkAbort = false;
+      showBulkStep("bulk-step-progress");
+      $("progressFill").style.width = "0%";
+      $("progressLog").innerHTML    = "";
+      $("progressLabel").textContent = "Preparing…";
+      $("bulkCancelBtn").disabled   = false;
+      $("bulkDoneBtn").style.display = "none";
+
+      const serverBase = (state.keys["self"] || "http://localhost:3000").replace(/\/$/, "");
+      const token      = state.secrets["self"] || "";
+      const w          = parseInt(state.width,  10) || 1440;
+      const scale      = parseInt(state.scale,  10) || 2;
+      const gap        = parseInt($("bulkGap").value, 10) || 40;
+      const baseUrl    = $("bulk-url").value || state.url;
+
+      /* Ask sandbox to create the container Auto Layout frame */
+      parent.postMessage({ pluginMessage: { type:"start-bulk", url:baseUrl, layout:bulkLayout, gap } }, "*");
+      await waitForSandbox("bulk-started");
+
+      let done = 0, failed = 0;
+
+      for (let i = 0; i < selected.length; i++) {
+        if (bulkAbort) break;
+        const { href, text } = selected[i];
+
+        $("progressLabel").textContent = `${i + 1}/${selected.length} — ${text}`;
+        $("progressFill").style.width = ((i / selected.length) * 100).toFixed(1) + "%";
+
+        try {
+          let qs = "url=" + enc(href) + "&width=" + w + "&scale=" + scale;
+          if (token) qs += "&token=" + enc(token);
+          const r = await fetch(serverBase + "/screenshot?" + qs);
+          if (!r.ok) throw new Error("HTTP " + r.status);
+          const blob = await r.blob();
+          if (!blob.type.startsWith("image/")) throw new Error("Not an image");
+
+          const { tiles, totalWidth, totalHeight } = await buildTiles(blob);
+
+          parent.postMessage({ pluginMessage: {
+            type:"add-bulk-page", tiles, totalWidth, totalHeight, url:href, title:text
+          } }, "*");
+          await waitForSandbox("bulk-page-added");
+
+          done++;
+          pushUrlHistory(href);
+          addBulkLog("ok", text);
+        } catch (err) {
+          failed++;
+          addBulkLog("err", text + " — " + ((err && err.message) || "failed"));
+        }
+      }
+
+      $("progressFill").style.width  = "100%";
+      $("progressLabel").textContent = bulkAbort
+        ? `Stopped — ${done} added${failed ? ", " + failed + " failed" : ""}`
+        : `Done — ${done}/${done + failed} captured${failed ? ` (${failed} failed)` : ""}`;
+
+      parent.postMessage({ pluginMessage: { type:"finish-bulk", count:done } }, "*");
+      await waitForSandbox("bulk-done");
+
+      $("bulkCancelBtn").disabled     = true;
+      $("bulkDoneBtn").style.display  = "";
+    }
+
+    function addBulkLog(type, text) {
+      const log  = $("progressLog");
+      const div  = document.createElement("div");
+      div.className = "log-entry " + type;
+      div.innerHTML = `<span class="log-icon">${type==="ok"?"✓":"✕"}</span><span class="log-text">${escHtml(text)}</span>`;
+      log.appendChild(div);
+      log.scrollTop = log.scrollHeight;
+    }
 
     /* Ask the sandbox for saved settings. */
     parent.postMessage({ pluginMessage: { type: "ui-ready" } }, "*");

@@ -346,6 +346,124 @@ app.get("/screenshot", auth, async (req, res) => {
   }
 });
 
+// ── GET /crawl ───────────────────────────────────────────────────────
+app.get("/crawl", auth, async (req, res) => {
+  const { url } = req.query;
+  if (!url) return res.status(400).json({ error: "Missing ?url=" });
+
+  let parsedUrl;
+  try {
+    parsedUrl = new URL(url);
+    if (!["http:", "https:"].includes(parsedUrl.protocol))
+      throw new Error("Protocol must be http or https.");
+  } catch (e) {
+    return res.status(400).json({ error: "Invalid URL: " + e.message });
+  }
+
+  try { await acquireSlot(); }
+  catch { return res.status(503).json({ error: "Server busy — try again shortly." }); }
+
+  try {
+    const b = await getBrowser();
+    const ctx = await b.newContext({
+      viewport: { width: 1440, height: 900 },
+      userAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+    });
+
+    try {
+      const page = await ctx.newPage();
+
+      // Block heavy resources — only need HTML/CSS/JS for link extraction
+      await page.route("**/*", route => {
+        const t = route.request().resourceType();
+        if (["image", "media", "font", "stylesheet"].includes(t) ||
+            BLOCKED.some(r => r.test(route.request().url())))
+          return route.abort();
+        return route.continue();
+      });
+
+      await page.goto(url, { waitUntil: "domcontentloaded", timeout: TIMEOUT_MS });
+      await page.waitForTimeout(1200);
+
+      const links = await page.evaluate((baseHref) => {
+        const base = new URL(baseHref);
+        const seen = new Set();
+        const results = [];
+
+        function classify(el) {
+          let node = el.parentElement;
+          while (node && node !== document.body) {
+            const tag = node.tagName.toLowerCase();
+            const role = (node.getAttribute("role") || "").toLowerCase();
+            const cls  = (node.className || "").toString().toLowerCase();
+            const id   = (node.id || "").toLowerCase();
+            if (tag === "header" || cls.includes("header") || id.includes("header")) return "header";
+            if (tag === "nav" || role === "navigation" || cls.includes("nav") || cls.includes("menu")) return "nav";
+            if (tag === "footer" || cls.includes("footer") || id.includes("footer")) return "footer";
+            node = node.parentElement;
+          }
+          return "body";
+        }
+
+        document.querySelectorAll("a[href]").forEach(a => {
+          try {
+            const resolved = new URL(a.getAttribute("href"), base);
+            if (resolved.hostname !== base.hostname) return;
+            // Normalize: strip hash and trailing slash
+            const clean = (resolved.origin + resolved.pathname).replace(/\/$/, "") || resolved.origin;
+            if (seen.has(clean)) return;
+            // Skip if same as base URL
+            const baseClean = (base.origin + base.pathname).replace(/\/$/, "") || base.origin;
+            if (clean === baseClean) return;
+            seen.add(clean);
+            const text = (a.innerText || a.textContent || "").trim().replace(/\s+/g, " ").slice(0, 80);
+            if (!text || text.length < 2) return;
+            results.push({ text, href: clean, section: classify(a) });
+          } catch (_) {}
+        });
+
+        return results;
+      }, url);
+
+      // Try sitemap.xml for extra coverage
+      let sitemapLinks = [];
+      try {
+        const sitemapPage = await ctx.newPage();
+        await sitemapPage.goto(parsedUrl.origin + "/sitemap.xml", {
+          waitUntil: "domcontentloaded", timeout: 8000
+        });
+        const content = await sitemapPage.content();
+        await sitemapPage.close();
+
+        const existingHrefs = new Set(links.map(l => l.href));
+        const locs = content.match(/<loc>([^<]+)<\/loc>/gi) || [];
+        for (const loc of locs.slice(0, 60)) {
+          const href = loc.replace(/<\/?loc>/gi, "").trim();
+          try {
+            const u = new URL(href);
+            if (u.hostname !== parsedUrl.hostname) continue;
+            const clean = (u.origin + u.pathname).replace(/\/$/, "") || u.origin;
+            if (existingHrefs.has(clean)) continue;
+            existingHrefs.add(clean);
+            const slug = u.pathname.replace(/\/$/, "").split("/").filter(Boolean).pop() || "home";
+            sitemapLinks.push({ text: slug.replace(/-/g, " "), href: clean, section: "sitemap" });
+          } catch (_) {}
+        }
+      } catch (_) {}
+
+      console.log(`[crawl] ${url} → ${links.length} + ${sitemapLinks.length} sitemap links`);
+      res.json({ links: [...links, ...sitemapLinks] });
+    } finally {
+      await ctx.close();
+    }
+  } catch (err) {
+    console.error("[crawl error]", err.message);
+    res.status(500).json({ error: err.message || "Crawl failed." });
+  } finally {
+    releaseSlot();
+  }
+});
+
 app.get("/health", (_req, res) => {
   res.json({
     ok: true,

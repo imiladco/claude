@@ -11,7 +11,7 @@
 
 "use strict";
 
-const BASE_VERSION = "1.4.0";          // Must match CURRENT_VERSION in ui.html.
+const BASE_VERSION = "1.5.0";          // Must match CURRENT_VERSION in ui.html.
 const STORE_KEY    = "ws:settings";    // clientStorage: user settings + keys.
 const UI_CACHE_KEY = "ws:ui-cache";    // clientStorage: { version, html }.
 const WINDOW = { width: 380, height: 560, title: "Website Screenshot" };
@@ -58,6 +58,18 @@ figma.ui.onmessage = async (msg) => {
       case "add-image":
         await addImage(msg);
         break;
+      case "start-bulk":
+        await startBulk(msg);
+        break;
+      case "add-bulk-page":
+        await addBulkPage(msg);
+        break;
+      case "finish-bulk":
+        finishBulk(msg);
+        break;
+      case "cancel-bulk":
+        cancelBulk();
+        break;
       case "apply-update":
         await figma.clientStorage.setAsync(UI_CACHE_KEY, {
           version: msg.version, html: msg.html
@@ -82,14 +94,8 @@ figma.ui.onmessage = async (msg) => {
   }
 };
 
-// ── Assemble tiles into one named object on the canvas ──────────────
-async function addImage(msg) {
-  const { tiles, totalWidth, totalHeight, url } = msg;
-  if (!tiles || !tiles.length) throw new Error("No image data received.");
-
-  const name = siteName(url);
-  let node;
-
+// ── Shared: assemble tiles into a single node ───────────────────────
+async function assembleTiles(tiles, totalWidth, totalHeight, name) {
   if (tiles.length === 1) {
     const t = tiles[0];
     const image = figma.createImage(new Uint8Array(t.data));
@@ -97,28 +103,35 @@ async function addImage(msg) {
     rect.name = name;
     rect.resize(t.width, t.height);
     rect.fills = [{ type: "IMAGE", scaleMode: "FILL", imageHash: image.hash }];
-    node = rect;
-  } else {
-    // Tall capture — stack tiles inside one clipping frame.
-    const frame = figma.createFrame();
-    frame.name = name;
-    frame.resize(totalWidth, totalHeight);
-    frame.clipsContent = true;
-    frame.fills = [];
-    let i = 0;
-    for (const t of tiles) {
-      i++;
-      const image = figma.createImage(new Uint8Array(t.data));
-      const rect = figma.createRectangle();
-      rect.name = "slice-" + i;
-      rect.resize(t.width, t.height);
-      rect.x = 0;
-      rect.y = t.y;
-      rect.fills = [{ type: "IMAGE", scaleMode: "FILL", imageHash: image.hash }];
-      frame.appendChild(rect);
-    }
-    node = frame;
+    return rect;
   }
+  const frame = figma.createFrame();
+  frame.name = name;
+  frame.resize(totalWidth, totalHeight);
+  frame.clipsContent = true;
+  frame.fills = [];
+  let i = 0;
+  for (const t of tiles) {
+    i++;
+    const image = figma.createImage(new Uint8Array(t.data));
+    const rect = figma.createRectangle();
+    rect.name = "slice-" + i;
+    rect.resize(t.width, t.height);
+    rect.x = 0;
+    rect.y = t.y;
+    rect.fills = [{ type: "IMAGE", scaleMode: "FILL", imageHash: image.hash }];
+    frame.appendChild(rect);
+  }
+  return frame;
+}
+
+// ── Single-page capture ──────────────────────────────────────────────
+async function addImage(msg) {
+  const { tiles, totalWidth, totalHeight, url } = msg;
+  if (!tiles || !tiles.length) throw new Error("No image data received.");
+
+  const name = siteName(url);
+  const node = await assembleTiles(tiles, totalWidth, totalHeight, name);
 
   const c = figma.viewport.center;
   node.x = Math.round(c.x - node.width / 2);
@@ -130,6 +143,80 @@ async function addImage(msg) {
 
   figma.ui.postMessage({ type: "done" });
   figma.notify("Screenshot added");
+}
+
+// ── Bulk capture — Auto Layout container ────────────────────────────
+let bulkFrame = null;
+
+async function startBulk(msg) {
+  const name = siteName(msg.url);
+  bulkFrame = figma.createFrame();
+  bulkFrame.name = name;
+  bulkFrame.layoutMode = msg.layout === "horizontal" ? "HORIZONTAL" : "VERTICAL";
+  bulkFrame.primaryAxisSizingMode = "AUTO";
+  bulkFrame.counterAxisSizingMode = "AUTO";
+  bulkFrame.itemSpacing = msg.gap || 40;
+  bulkFrame.paddingLeft = bulkFrame.paddingRight  = 40;
+  bulkFrame.paddingTop  = bulkFrame.paddingBottom = 40;
+  bulkFrame.fills = [{ type: "SOLID", color: { r: 0.09, g: 0.09, b: 0.09 } }];
+
+  const c = figma.viewport.center;
+  bulkFrame.x = Math.round(c.x);
+  bulkFrame.y = Math.round(c.y);
+  figma.currentPage.appendChild(bulkFrame);
+
+  figma.ui.postMessage({ type: "bulk-started" });
+}
+
+async function addBulkPage(msg) {
+  if (!bulkFrame) return;
+  const { tiles, totalWidth, totalHeight, url, title } = msg;
+  const label = title || siteName(url);
+
+  // Child frame: screenshot + text label, vertical auto layout
+  const pageFrame = figma.createFrame();
+  pageFrame.name = label;
+  pageFrame.layoutMode = "VERTICAL";
+  pageFrame.primaryAxisSizingMode = "AUTO";
+  pageFrame.counterAxisSizingMode = "AUTO";
+  pageFrame.itemSpacing = 12;
+  pageFrame.fills = [];
+
+  const shot = await assembleTiles(tiles, totalWidth, totalHeight, label);
+  pageFrame.appendChild(shot);
+
+  await figma.loadFontAsync({ family: "Inter", style: "Regular" });
+  const text = figma.createText();
+  text.characters = label;
+  text.fontSize = 14;
+  text.fills = [{ type: "SOLID", color: { r: 0.55, g: 0.55, b: 0.6 } }];
+  pageFrame.appendChild(text);
+
+  bulkFrame.appendChild(pageFrame);
+
+  figma.ui.postMessage({ type: "bulk-page-added" });
+}
+
+function finishBulk(msg) {
+  if (bulkFrame) {
+    figma.currentPage.selection = [bulkFrame];
+    figma.viewport.scrollAndZoomIntoView([bulkFrame]);
+  }
+  bulkFrame = null;
+  figma.ui.postMessage({ type: "bulk-done", count: msg.count || 0 });
+  if (msg.count) figma.notify("✓ " + msg.count + " pages added to canvas");
+}
+
+function cancelBulk() {
+  if (bulkFrame) {
+    if (bulkFrame.children.length === 0) bulkFrame.remove();
+    else {
+      figma.currentPage.selection = [bulkFrame];
+      figma.viewport.scrollAndZoomIntoView([bulkFrame]);
+    }
+  }
+  bulkFrame = null;
+  figma.ui.postMessage({ type: "bulk-cancelled" });
 }
 
 // Name the layer after the site host — no protocol, no www., no trailing slash.
