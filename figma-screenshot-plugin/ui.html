@@ -281,6 +281,7 @@
     <div class="field">
       <label>Provider</label>
       <select id="provider">
+        <option value="self">Self-hosted Playwright — Best quality</option>
         <option value="microlink">microlink.io — Free</option>
         <option value="thum">thum.io — Free</option>
         <option value="screenshotcore">ScreenshotCore — API key</option>
@@ -289,7 +290,7 @@
     </div>
 
     <div class="warn" id="warn">
-      <b>No API key set.</b> Open <b>Settings</b> to add one, or pick a free provider.
+      <b>Setup required.</b> Open <b>Settings</b> to configure this provider.
     </div>
 
     <button class="primary" id="capture">Capture full page</button>
@@ -307,6 +308,24 @@
 
   <!-- Settings panel -->
   <div class="panel" id="panel-settings">
+
+    <div class="group">
+      <span class="group-title">Self-hosted Playwright</span>
+      <div class="field">
+        <label>Server URL <a href="https://github.com/imiladco/claude/tree/main/screenshot-server" target="_blank">deploy guide ↗</a></label>
+        <input type="url" id="key-self" placeholder="https://your-server.railway.app" spellcheck="false" autocomplete="off" />
+      </div>
+      <div class="field">
+        <label>Auth token <span class="pill">optional</span></label>
+        <div class="key-row">
+          <input type="password" id="secret-self" placeholder="Your AUTH_TOKEN env var" spellcheck="false" autocomplete="off" />
+          <button class="secondary" data-save="self">Save</button>
+        </div>
+        <div class="key-status" id="status-self"></div>
+        <div class="hint">Best quality — handles lazy loading, animations, and accordions. Deploy free on Railway.</div>
+      </div>
+    </div>
+
     <div class="group">
       <span class="group-title">Free providers · no key</span>
       <div class="field">
@@ -356,7 +375,7 @@
 
   <!-- Footer -->
   <div class="footer">
-    <span class="version" id="version">v1.3.1</span>
+    <span class="version" id="version">v1.3.2</span>
     <div class="update-area">
       <span class="update-msg" id="updateMsg"></span>
       <button class="secondary" id="checkUpdate">Check for updates</button>
@@ -369,9 +388,9 @@
     /* ──────────────────────────────────────────────
        Constants
     ────────────────────────────────────────────── */
-    const CURRENT_VERSION = "1.3.1";
+    const CURRENT_VERSION = "1.3.2";
     const GITHUB_API = "https://api.github.com/repos/imiladco/claude/contents/figma-screenshot-plugin/ui.html";
-    const KEY_PROVIDERS = ["screenshotcore", "apiflash"];
+    const KEY_PROVIDERS = ["self", "screenshotcore", "apiflash"];
     const FIGMA_MAX = 4096;                  // Max px per image dimension in Figma.
     const TILE_BYTE_LIMIT = 4 * 1024 * 1024; // ~4 MB per image in Figma.
     const enc = encodeURIComponent;
@@ -391,8 +410,8 @@
       width: "1440",
       scale: "2",
       provider: "microlink",
-      keys:    { screenshotcore: "", apiflash: "" },
-      secrets: { screenshotcore: "" }
+      keys:    { self: "", screenshotcore: "", apiflash: "" },
+      secrets: { self: "", screenshotcore: "" }
     };
     let ready = false;
 
@@ -472,6 +491,7 @@
     });
 
     function hasValidKey(p) {
+      if (p === "self") return !!state.keys[p];  // URL required, token optional
       if (p === "screenshotcore") return !!(state.keys[p] && state.secrets[p]);
       return !!state.keys[p];
     }
@@ -479,7 +499,10 @@
     function renderKeyStatus(p) {
       const el = $("status-" + p);
       if (!el) return;
-      if (p === "screenshotcore") {
+      if (p === "self") {
+        el.textContent = state.keys[p] ? "Saved" : "";
+        el.style.color = "var(--success)";
+      } else if (p === "screenshotcore") {
         const k = state.keys[p], s = state.secrets[p];
         el.textContent = (k && s) ? "Saved" : (k || s) ? "Both key and secret required" : "";
         el.style.color = (k && s) ? "var(--success)" : (k || s) ? "var(--warning)" : "";
@@ -565,6 +588,13 @@
     }
 
     const PROVIDERS = {
+      self: (url, w, scale, serverUrl, token) => {
+        const base = serverUrl.replace(/\/$/, "");
+        let qs = "url=" + enc(url) + "&width=" + w + "&scale=" + scale;
+        if (token) qs += "&token=" + enc(token);
+        return fetchBlob(base + "/screenshot?" + qs);
+      },
+
       microlink: async (url, w, scale) => {
         const api =
           "https://api.microlink.io/?url=" + enc(url) +
@@ -683,6 +713,8 @@
       if (KEY_PROVIDERS.includes(provider) && !hasValidKey(provider)) {
         const msg = provider === "screenshotcore"
           ? "ScreenshotCore requires both access key and signing secret — open Settings."
+          : provider === "self"
+          ? "Self-hosted server URL not set — open Settings."
           : "API key missing — open Settings.";
         setStatus("error", msg);
         activateTab("settings");
@@ -769,8 +801,8 @@
         case "init":
           if (msg.settings) {
             Object.assign(state, msg.settings);
-            state.keys    = Object.assign({ screenshotcore: "", apiflash: "" }, msg.settings.keys);
-            state.secrets = Object.assign({ screenshotcore: "" }, msg.settings.secrets);
+            state.keys    = Object.assign({ self: "", screenshotcore: "", apiflash: "" }, msg.settings.keys);
+            state.secrets = Object.assign({ self: "", screenshotcore: "" }, msg.settings.secrets);
           }
           ready = true;
           applyState();
