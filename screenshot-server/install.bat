@@ -11,7 +11,7 @@ echo.
 
 :: ── Check Node.js ──────────────────────────────────────────────────
 echo  [0/3] Checking Node.js...
-where node >/dev/null 2>&1
+where node >nul 2>&1
 if errorlevel 1 (
   echo.
   echo  ERROR: Node.js is not installed.
@@ -76,7 +76,7 @@ powershell -NoProfile -Command ^
   "-WorkingDirectory '%DIR%' -WindowStyle Hidden"
 
 :: Wait a moment then verify
-timeout /t 3 /nobreak >/dev/null
+timeout /t 3 /nobreak >nul
 powershell -NoProfile -Command ^
   "try { $r=(Invoke-WebRequest http://localhost:3000/health -UseBasicParsing -TimeoutSec 5).Content; " ^
   "if($r -match 'ok') { Write-Host ' Server is running!' } } " ^
