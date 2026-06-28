@@ -76,6 +76,12 @@
 	padding: 0;
 }
 
+.anw-list-li {
+	display: inline-flex;
+	margin: 0;
+	padding: 0;
+}
+
 .anw-list-item {
 	display: inline-flex;
 	align-items: center;
