@@ -3,7 +3,7 @@
  * Plugin Name: Asre Nokhbegan – Elementor Widgets
  * Plugin URI:  https://asrenokhbegan.com
  * Description: ابزارک‌های اختصاصی المنتور برای وب‌سایت عصر نخبگان.
- * Version:     1.2.0
+ * Version:     1.3.0
  * Author:      imiladco
  * Author URI:  https://asrenokhbegan.com
  * Text Domain: asre-nokhbegan-widgets
@@ -18,7 +18,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit; // جلوگیری از دسترسی مستقیم.
 }
 
-define( 'ANW_VERSION', '1.2.0' );
+define( 'ANW_VERSION', '1.3.0' );
 define( 'ANW_MINIMUM_ELEMENTOR_VERSION', '3.25.0' );
 define( 'ANW_MINIMUM_PHP_VERSION', '7.4' );
 define( 'ANW_FILE', __FILE__ );

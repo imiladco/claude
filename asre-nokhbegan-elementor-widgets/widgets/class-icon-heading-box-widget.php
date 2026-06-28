@@ -104,23 +104,47 @@ class ANW_Icon_Heading_Box_Widget extends \Elementor\Widget_Base {
 		);
 
 		$this->add_control(
+			'titles_single_tag',
+			[
+				'label'        => esc_html__( 'ادغام دو عنوان در یک تگ (سئو)', 'asre-nokhbegan-widgets' ),
+				'type'         => Controls_Manager::SWITCHER,
+				'return_value' => 'yes',
+				'default'      => '',
+				'separator'    => 'before',
+				'description'  => esc_html__( 'وقتی فعال باشد، هر دو عنوان داخل یک تگ واحد (مثلاً h2) قرار می‌گیرند تا از نظر سئو یک تیتر پیوسته در نظر گرفته شوند؛ استایل هرکدام مستقل باقی می‌ماند.', 'asre-nokhbegan-widgets' ),
+			]
+		);
+
+		$this->add_control(
+			'combined_tag',
+			[
+				'label'     => esc_html__( 'تگ مشترک', 'asre-nokhbegan-widgets' ),
+				'type'      => Controls_Manager::SELECT,
+				'default'   => 'h2',
+				'options'   => $this->get_title_tags(),
+				'condition' => [ 'titles_single_tag' => 'yes' ],
+			]
+		);
+
+		$this->add_control(
 			'title_1_tag',
 			[
 				'label'     => esc_html__( 'تگ عنوان اول', 'asre-nokhbegan-widgets' ),
 				'type'      => Controls_Manager::SELECT,
 				'default'   => 'p',
 				'options'   => $this->get_title_tags(),
-				'separator' => 'before',
+				'condition' => [ 'titles_single_tag!' => 'yes' ],
 			]
 		);
 
 		$this->add_control(
 			'title_2_tag',
 			[
-				'label'   => esc_html__( 'تگ عنوان دوم', 'asre-nokhbegan-widgets' ),
-				'type'    => Controls_Manager::SELECT,
-				'default' => 'h2',
-				'options' => $this->get_title_tags(),
+				'label'     => esc_html__( 'تگ عنوان دوم', 'asre-nokhbegan-widgets' ),
+				'type'      => Controls_Manager::SELECT,
+				'default'   => 'h2',
+				'options'   => $this->get_title_tags(),
+				'condition' => [ 'titles_single_tag!' => 'yes' ],
 			]
 		);
 
@@ -600,8 +624,7 @@ class ANW_Icon_Heading_Box_Widget extends \Elementor\Widget_Base {
 
 		$icon_html    = anw_get_media_icon_html( $settings['icon_image'] );
 		$allowed_html = anw_allowed_inline_html();
-		$tag_1        = anw_validate_html_tag( $settings['title_1_tag'], 'p' );
-		$tag_2        = anw_validate_html_tag( $settings['title_2_tag'], 'h2' );
+		$is_combined  = ! empty( $settings['titles_single_tag'] ) && 'yes' === $settings['titles_single_tag'];
 		?>
 		<<?php echo esc_html( $tag ); ?> <?php $this->print_render_attribute_string( 'wrapper' ); ?>>
 			<?php if ( $icon_html ) : ?>
@@ -610,11 +633,27 @@ class ANW_Icon_Heading_Box_Widget extends \Elementor\Widget_Base {
 
 			<?php if ( ! empty( $settings['title_1'] ) || ! empty( $settings['title_2'] ) ) : ?>
 				<span class="anw-ihb-content">
-					<?php if ( ! empty( $settings['title_1'] ) ) : ?>
-						<<?php echo esc_html( $tag_1 ); ?> class="anw-ihb-title-1"><?php echo wp_kses( $settings['title_1'], $allowed_html ); ?></<?php echo esc_html( $tag_1 ); ?>>
-					<?php endif; ?>
-					<?php if ( ! empty( $settings['title_2'] ) ) : ?>
-						<<?php echo esc_html( $tag_2 ); ?> class="anw-ihb-title-2"><?php echo wp_kses( $settings['title_2'], $allowed_html ); ?></<?php echo esc_html( $tag_2 ); ?>>
+					<?php if ( $is_combined ) :
+						$combined_tag = anw_validate_html_tag( $settings['combined_tag'], 'h2' );
+						?>
+						<<?php echo esc_html( $combined_tag ); ?>>
+							<?php if ( ! empty( $settings['title_1'] ) ) : ?>
+								<span class="anw-ihb-title-1"><?php echo wp_kses( $settings['title_1'], $allowed_html ); ?></span>
+							<?php endif; ?>
+							<?php if ( ! empty( $settings['title_2'] ) ) : ?>
+								<span class="anw-ihb-title-2"><?php echo wp_kses( $settings['title_2'], $allowed_html ); ?></span>
+							<?php endif; ?>
+						</<?php echo esc_html( $combined_tag ); ?>>
+					<?php else :
+						$tag_1 = anw_validate_html_tag( $settings['title_1_tag'], 'p' );
+						$tag_2 = anw_validate_html_tag( $settings['title_2_tag'], 'h2' );
+						?>
+						<?php if ( ! empty( $settings['title_1'] ) ) : ?>
+							<<?php echo esc_html( $tag_1 ); ?> class="anw-ihb-title-1"><?php echo wp_kses( $settings['title_1'], $allowed_html ); ?></<?php echo esc_html( $tag_1 ); ?>>
+						<?php endif; ?>
+						<?php if ( ! empty( $settings['title_2'] ) ) : ?>
+							<<?php echo esc_html( $tag_2 ); ?> class="anw-ihb-title-2"><?php echo wp_kses( $settings['title_2'], $allowed_html ); ?></<?php echo esc_html( $tag_2 ); ?>>
+						<?php endif; ?>
 					<?php endif; ?>
 				</span>
 			<?php endif; ?>
