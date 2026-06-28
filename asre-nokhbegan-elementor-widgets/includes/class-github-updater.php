@@ -57,6 +57,84 @@ class ANW_Github_Updater {
 		add_filter( 'pre_set_site_transient_update_plugins', [ $this, 'check_update' ] );
 		add_filter( 'plugins_api', [ $this, 'plugin_info' ], 10, 3 );
 		add_filter( 'upgrader_post_install', [ $this, 'after_install' ], 10, 3 );
+
+		if ( is_admin() ) {
+			add_filter( 'plugin_action_links_' . plugin_basename( $this->file ), [ $this, 'action_links' ] );
+			add_action( 'admin_init', [ $this, 'handle_force_check' ] );
+			add_action( 'admin_notices', [ $this, 'force_check_notice' ] );
+		}
+	}
+
+	/**
+	 * افزودن لینک «بررسی بروزرسانی» در ردیف افزونه.
+	 *
+	 * @param array $links
+	 * @return array
+	 */
+	public function action_links( $links ) {
+		$url = wp_nonce_url(
+			self_admin_url( 'plugins.php?anw_force_check=' . rawurlencode( plugin_basename( $this->file ) ) ),
+			'anw_force_check'
+		);
+
+		$links['anw_check'] = sprintf(
+			'<a href="%s">%s</a>',
+			esc_url( $url ),
+			esc_html__( 'بررسی بروزرسانی', 'asre-nokhbegan-widgets' )
+		);
+
+		return $links;
+	}
+
+	/**
+	 * پاک‌سازی کش و واداشتن وردپرس به بررسی فوری بروزرسانی.
+	 */
+	public function handle_force_check() {
+		if ( empty( $_GET['anw_force_check'] ) || plugin_basename( $this->file ) !== sanitize_text_field( wp_unslash( $_GET['anw_force_check'] ) ) ) {
+			return;
+		}
+		if ( ! current_user_can( 'update_plugins' ) ) {
+			return;
+		}
+		check_admin_referer( 'anw_force_check' );
+
+		delete_transient( 'anw_gh_release_' . md5( $this->repo ) );
+		delete_site_transient( 'update_plugins' );
+		$this->remote = null;
+		wp_update_plugins();
+
+		wp_safe_redirect( self_admin_url( 'plugins.php?anw_checked=1' ) );
+		exit;
+	}
+
+	/**
+	 * نمایش پیام پس از بررسی دستی.
+	 */
+	public function force_check_notice() {
+		if ( empty( $_GET['anw_checked'] ) ) {
+			return;
+		}
+
+		$this->ensure_plugin_data();
+		$version = $this->remote_version();
+		$current = $this->plugin_data['Version'];
+
+		if ( $version && version_compare( $version, $current, '>' ) ) {
+			$message = sprintf(
+				/* translators: %s: نسخهٔ جدید. */
+				esc_html__( 'نسخهٔ جدید (%s) موجود است؛ از همین صفحه می‌توانید بروزرسانی کنید.', 'asre-nokhbegan-widgets' ),
+				$version
+			);
+			$class = 'notice-warning';
+		} elseif ( $version ) {
+			$message = esc_html__( 'افزونه به‌روز است. (آخرین نسخهٔ منتشرشده روی گیت‌هاب بررسی شد.)', 'asre-nokhbegan-widgets' );
+			$class   = 'notice-success';
+		} else {
+			$message = esc_html__( 'بررسی انجام شد، اما هیچ Releaseای روی مخزن گیت‌هاب پیدا نشد. ابتدا یک Release منتشر کنید.', 'asre-nokhbegan-widgets' );
+			$class   = 'notice-info';
+		}
+
+		printf( '<div class="notice %s is-dismissible"><p>%s</p></div>', esc_attr( $class ), esc_html( $message ) );
 	}
 
 	/**

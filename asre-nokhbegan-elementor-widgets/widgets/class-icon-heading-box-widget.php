@@ -177,16 +177,31 @@ class ANW_Icon_Heading_Box_Widget extends \Elementor\Widget_Base {
 			'content_justify',
 			[
 				'label'       => esc_html__( 'توزیع افقی آیکون و متن', 'asre-nokhbegan-widgets' ),
-				'type'        => Controls_Manager::SELECT,
+				'type'        => Controls_Manager::CHOOSE,
 				'default'     => 'flex-start',
 				'options'     => [
-					'flex-start'    => esc_html__( 'کنار هم (شروع)', 'asre-nokhbegan-widgets' ),
-					'center'        => esc_html__( 'وسط', 'asre-nokhbegan-widgets' ),
-					'flex-end'      => esc_html__( 'کنار هم (پایان)', 'asre-nokhbegan-widgets' ),
-					'space-between' => esc_html__( 'دو سرِ کادر (Space Between)', 'asre-nokhbegan-widgets' ),
-					'space-around'  => esc_html__( 'با فاصلهٔ اطراف (Space Around)', 'asre-nokhbegan-widgets' ),
+					'flex-start'    => [
+						'title' => esc_html__( 'شروع', 'asre-nokhbegan-widgets' ),
+						'icon'  => 'eicon-flex eicon-justify-start-h',
+					],
+					'center'        => [
+						'title' => esc_html__( 'وسط', 'asre-nokhbegan-widgets' ),
+						'icon'  => 'eicon-flex eicon-justify-center-h',
+					],
+					'flex-end'      => [
+						'title' => esc_html__( 'پایان', 'asre-nokhbegan-widgets' ),
+						'icon'  => 'eicon-flex eicon-justify-end-h',
+					],
+					'space-between' => [
+						'title' => esc_html__( 'دو سرِ کادر', 'asre-nokhbegan-widgets' ),
+						'icon'  => 'eicon-flex eicon-justify-space-between-h',
+					],
+					'space-around'  => [
+						'title' => esc_html__( 'با فاصلهٔ اطراف', 'asre-nokhbegan-widgets' ),
+						'icon'  => 'eicon-flex eicon-justify-space-around-h',
+					],
 				],
-				'description' => esc_html__( 'با انتخاب «دو سرِ کادر»، آیکون و متن نسبت به عرض کل به دو طرف می‌چسبند.', 'asre-nokhbegan-widgets' ),
+				'description' => esc_html__( 'با «دو سرِ کادر» آیکون و متن نسبت به عرض کل به دو طرف می‌چسبند.', 'asre-nokhbegan-widgets' ),
 				'selectors'   => [
 					'{{WRAPPER}} .anw-ihb' => 'justify-content: {{VALUE}};',
 				],
@@ -457,7 +472,7 @@ class ANW_Icon_Heading_Box_Widget extends \Elementor\Widget_Base {
 	 */
 	private function add_single_title_tab( string $index, string $label ): void {
 		$key      = 'title_' . $index;
-		$selector = '{{WRAPPER}} .anw-ihb-' . $key;
+		$selector = '{{WRAPPER}} .anw-ihb-title-' . $index;
 
 		$this->start_controls_tab( $key . '_tab', [ 'label' => $label ] );
 
@@ -483,7 +498,7 @@ class ANW_Icon_Heading_Box_Widget extends \Elementor\Widget_Base {
 			[
 				'label'     => esc_html__( 'رنگ در هاور', 'asre-nokhbegan-widgets' ),
 				'type'      => Controls_Manager::COLOR,
-				'selectors' => [ '{{WRAPPER}} .anw-ihb:hover .anw-ihb-' . $key => 'color: {{VALUE}};' ],
+				'selectors' => [ '{{WRAPPER}} .anw-ihb:hover .anw-ihb-title-' . $index => 'color: {{VALUE}};' ],
 			]
 		);
 

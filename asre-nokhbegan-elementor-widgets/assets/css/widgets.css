@@ -37,6 +37,35 @@
 	transition: color 0.3s ease;
 }
 
+/* ---------- ابزارک: کارت آیکون و عنوان ---------- */
+.anw-it {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	gap: 12px;
+	text-decoration: none;
+}
+
+.anw-it-icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	flex-shrink: 0;
+	transition: all 0.3s ease;
+}
+
+.anw-it-icon img,
+.anw-it-icon svg {
+	display: block;
+	width: 48px;
+	height: auto;
+}
+
+.anw-it-title {
+	margin: 0;
+	transition: color 0.3s ease;
+}
+
 /* ---------- ابزارک: لیست عنوان‌ها ---------- */
 .anw-list {
 	display: flex;
