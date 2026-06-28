@@ -1,0 +1,59 @@
+/* استایل پایهٔ ابزارک‌های عصر نخبگان — جزئیات از طریق کنترل‌های المنتور تنظیم می‌شود. */
+
+/* ---------- ابزارک: سرتیتر آیکون‌دار ---------- */
+.anw-ihb {
+	display: flex;
+	align-items: center;
+	gap: 16px;
+	text-decoration: none;
+}
+
+.anw-ihb-icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	flex-shrink: 0;
+	transition: all 0.3s ease;
+}
+
+.anw-ihb-icon img,
+.anw-ihb-icon svg {
+	display: block;
+	width: 48px;
+	height: auto;
+}
+
+.anw-ihb-content {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	min-width: 0;
+}
+
+.anw-ihb-title-1,
+.anw-ihb-title-2 {
+	margin: 0;
+	transition: color 0.3s ease;
+}
+
+/* ---------- ابزارک: لیست عنوان‌ها ---------- */
+.anw-list {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 12px;
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+
+.anw-list-item {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	text-decoration: none;
+	transition: all 0.3s ease;
+}
+
+.anw-list-item-title {
+	transition: color 0.3s ease;
+}
