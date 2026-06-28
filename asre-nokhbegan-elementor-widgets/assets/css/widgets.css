@@ -33,8 +33,14 @@
 
 .anw-ihb-title-1,
 .anw-ihb-title-2 {
+	display: block;
 	margin: 0;
 	transition: color 0.3s ease;
+}
+
+.anw-ihb-titles-wrap {
+	display: flex;
+	flex-direction: column;
 }
 
 /* ---------- ابزارک: کارت آیکون و عنوان ---------- */

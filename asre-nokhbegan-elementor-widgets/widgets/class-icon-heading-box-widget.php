@@ -319,7 +319,8 @@ class ANW_Icon_Heading_Box_Widget extends \Elementor\Widget_Base {
 				'size_units' => [ 'px', 'em', 'rem' ],
 				'range'      => [ 'px' => [ 'min' => 0, 'max' => 100 ] ],
 				'selectors'  => [
-					'{{WRAPPER}} .anw-ihb-content' => 'gap: {{SIZE}}{{UNIT}};',
+					'{{WRAPPER}} .anw-ihb-content'      => 'gap: {{SIZE}}{{UNIT}};',
+					'{{WRAPPER}} .anw-ihb-titles-wrap' => 'gap: {{SIZE}}{{UNIT}};',
 				],
 			]
 		);
@@ -636,7 +637,7 @@ class ANW_Icon_Heading_Box_Widget extends \Elementor\Widget_Base {
 					<?php if ( $is_combined ) :
 						$combined_tag = anw_validate_html_tag( $settings['combined_tag'], 'h2' );
 						?>
-						<<?php echo esc_html( $combined_tag ); ?>>
+						<<?php echo esc_html( $combined_tag ); ?> class="anw-ihb-titles-wrap">
 							<?php if ( ! empty( $settings['title_1'] ) ) : ?>
 								<span class="anw-ihb-title-1"><?php echo wp_kses( $settings['title_1'], $allowed_html ); ?></span>
 							<?php endif; ?>
