@@ -52,10 +52,8 @@ class ANW_Icon_Heading_Box_Widget extends \Elementor\Widget_Base {
 		$this->register_content_controls();
 		$this->register_layout_controls();
 		$this->register_gap_style_controls();
-		$this->register_box_style_controls();
 		$this->register_icon_style_controls();
-		$this->register_title_style_controls( '1', esc_html__( 'عنوان اول', 'asre-nokhbegan-widgets' ) );
-		$this->register_title_style_controls( '2', esc_html__( 'عنوان دوم', 'asre-nokhbegan-widgets' ) );
+		$this->register_titles_style_controls();
 		$this->register_highlight_style_controls();
 	}
 
@@ -86,7 +84,8 @@ class ANW_Icon_Heading_Box_Widget extends \Elementor\Widget_Base {
 			'title_1',
 			[
 				'label'       => esc_html__( 'عنوان اول', 'asre-nokhbegan-widgets' ),
-				'type'        => Controls_Manager::TEXT,
+				'type'        => Controls_Manager::TEXTAREA,
+				'rows'        => 2,
 				'dynamic'     => [ 'active' => true ],
 				'default'     => esc_html__( 'پرمخاطب‌ترین انتخاب هنرجوها', 'asre-nokhbegan-widgets' ),
 				'description' => esc_html__( 'برای استایل‌دهی به بخشی از متن، آن را داخل <span> قرار دهید. مثال: متن <span>متمایز</span>', 'asre-nokhbegan-widgets' ),
@@ -94,22 +93,24 @@ class ANW_Icon_Heading_Box_Widget extends \Elementor\Widget_Base {
 		);
 
 		$this->add_control(
-			'title_1_tag',
+			'title_2',
 			[
-				'label'   => esc_html__( 'تگ عنوان اول', 'asre-nokhbegan-widgets' ),
-				'type'    => Controls_Manager::SELECT,
-				'default' => 'p',
-				'options' => $this->get_title_tags(),
+				'label'   => esc_html__( 'عنوان دوم', 'asre-nokhbegan-widgets' ),
+				'type'    => Controls_Manager::TEXTAREA,
+				'rows'    => 2,
+				'dynamic' => [ 'active' => true ],
+				'default' => esc_html__( 'محبوب ترین دوره ها', 'asre-nokhbegan-widgets' ),
 			]
 		);
 
 		$this->add_control(
-			'title_2',
+			'title_1_tag',
 			[
-				'label'   => esc_html__( 'عنوان دوم', 'asre-nokhbegan-widgets' ),
-				'type'    => Controls_Manager::TEXT,
-				'dynamic' => [ 'active' => true ],
-				'default' => esc_html__( 'محبوب ترین دوره ها', 'asre-nokhbegan-widgets' ),
+				'label'     => esc_html__( 'تگ عنوان اول', 'asre-nokhbegan-widgets' ),
+				'type'      => Controls_Manager::SELECT,
+				'default'   => 'p',
+				'options'   => $this->get_title_tags(),
+				'separator' => 'before',
 			]
 		);
 
@@ -130,6 +131,7 @@ class ANW_Icon_Heading_Box_Widget extends \Elementor\Widget_Base {
 				'type'        => Controls_Manager::URL,
 				'dynamic'     => [ 'active' => true ],
 				'placeholder' => esc_html__( 'https://your-link.com', 'asre-nokhbegan-widgets' ),
+				'separator'   => 'before',
 			]
 		);
 
@@ -167,6 +169,26 @@ class ANW_Icon_Heading_Box_Widget extends \Elementor\Widget_Base {
 				],
 				'selectors'            => [
 					'{{WRAPPER}} .anw-ihb' => '{{VALUE}}',
+				],
+			]
+		);
+
+		$this->add_responsive_control(
+			'content_justify',
+			[
+				'label'       => esc_html__( 'توزیع افقی آیکون و متن', 'asre-nokhbegan-widgets' ),
+				'type'        => Controls_Manager::SELECT,
+				'default'     => 'flex-start',
+				'options'     => [
+					'flex-start'    => esc_html__( 'کنار هم (شروع)', 'asre-nokhbegan-widgets' ),
+					'center'        => esc_html__( 'وسط', 'asre-nokhbegan-widgets' ),
+					'flex-end'      => esc_html__( 'کنار هم (پایان)', 'asre-nokhbegan-widgets' ),
+					'space-between' => esc_html__( 'دو سرِ کادر (Space Between)', 'asre-nokhbegan-widgets' ),
+					'space-around'  => esc_html__( 'با فاصلهٔ اطراف (Space Around)', 'asre-nokhbegan-widgets' ),
+				],
+				'description' => esc_html__( 'با انتخاب «دو سرِ کادر»، آیکون و متن نسبت به عرض کل به دو طرف می‌چسبند.', 'asre-nokhbegan-widgets' ),
+				'selectors'   => [
+					'{{WRAPPER}} .anw-ihb' => 'justify-content: {{VALUE}};',
 				],
 			]
 		);
@@ -239,11 +261,12 @@ class ANW_Icon_Heading_Box_Widget extends \Elementor\Widget_Base {
 		$this->add_responsive_control(
 			'icon_gap',
 			[
-				'label'      => esc_html__( 'فاصلهٔ آیکون تا متن', 'asre-nokhbegan-widgets' ),
-				'type'       => Controls_Manager::SLIDER,
-				'size_units' => [ 'px', 'em', 'rem' ],
-				'range'      => [ 'px' => [ 'min' => 0, 'max' => 200 ] ],
-				'selectors'  => [
+				'label'       => esc_html__( 'فاصلهٔ آیکون تا متن', 'asre-nokhbegan-widgets' ),
+				'type'        => Controls_Manager::SLIDER,
+				'size_units'  => [ 'px', 'em', 'rem' ],
+				'range'       => [ 'px' => [ 'min' => 0, 'max' => 200 ] ],
+				'description' => esc_html__( 'در حالت توزیع «دو سرِ کادر» این فاصله بی‌اثر است.', 'asre-nokhbegan-widgets' ),
+				'selectors'   => [
 					'{{WRAPPER}} .anw-ihb' => 'gap: {{SIZE}}{{UNIT}};',
 				],
 			]
@@ -261,114 +284,6 @@ class ANW_Icon_Heading_Box_Widget extends \Elementor\Widget_Base {
 				],
 			]
 		);
-
-		$this->end_controls_section();
-	}
-
-	/* ============================ استایل: باکس ============================ */
-
-	private function register_box_style_controls(): void {
-		$this->start_controls_section(
-			'box_style_section',
-			[
-				'label' => esc_html__( 'باکس', 'asre-nokhbegan-widgets' ),
-				'tab'   => Controls_Manager::TAB_STYLE,
-			]
-		);
-
-		$this->add_responsive_control(
-			'box_padding',
-			[
-				'label'      => esc_html__( 'پدینگ', 'asre-nokhbegan-widgets' ),
-				'type'       => Controls_Manager::DIMENSIONS,
-				'size_units' => [ 'px', 'em', 'rem', '%' ],
-				'selectors'  => [
-					'{{WRAPPER}} .anw-ihb' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
-				],
-			]
-		);
-
-		$this->add_responsive_control(
-			'box_radius',
-			[
-				'label'      => esc_html__( 'گردی گوشه', 'asre-nokhbegan-widgets' ),
-				'type'       => Controls_Manager::DIMENSIONS,
-				'size_units' => [ 'px', 'em', 'rem', '%' ],
-				'selectors'  => [
-					'{{WRAPPER}} .anw-ihb' => 'border-radius: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
-				],
-			]
-		);
-
-		$this->add_control(
-			'box_transition',
-			[
-				'label'     => esc_html__( 'مدت انیمیشن (ثانیه)', 'asre-nokhbegan-widgets' ),
-				'type'      => Controls_Manager::SLIDER,
-				'range'     => [ 'px' => [ 'min' => 0, 'max' => 3, 'step' => 0.1 ] ],
-				'default'   => [ 'size' => 0.3 ],
-				'selectors' => [
-					'{{WRAPPER}} .anw-ihb' => 'transition: all {{SIZE}}s ease;',
-				],
-			]
-		);
-
-		$this->start_controls_tabs( 'box_style_tabs' );
-
-		$this->start_controls_tab( 'box_normal_tab', [ 'label' => esc_html__( 'عادی', 'asre-nokhbegan-widgets' ) ] );
-
-		$this->add_group_control(
-			Group_Control_Background::get_type(),
-			[
-				'name'     => 'box_bg',
-				'types'    => [ 'classic', 'gradient' ],
-				'selector' => '{{WRAPPER}} .anw-ihb',
-			]
-		);
-		$this->add_group_control(
-			Group_Control_Border::get_type(),
-			[
-				'name'     => 'box_border',
-				'selector' => '{{WRAPPER}} .anw-ihb',
-			]
-		);
-		$this->add_group_control(
-			Group_Control_Box_Shadow::get_type(),
-			[
-				'name'     => 'box_shadow',
-				'selector' => '{{WRAPPER}} .anw-ihb',
-			]
-		);
-
-		$this->end_controls_tab();
-
-		$this->start_controls_tab( 'box_hover_tab', [ 'label' => esc_html__( 'هاور', 'asre-nokhbegan-widgets' ) ] );
-
-		$this->add_group_control(
-			Group_Control_Background::get_type(),
-			[
-				'name'     => 'box_bg_hover',
-				'types'    => [ 'classic', 'gradient' ],
-				'selector' => '{{WRAPPER}} .anw-ihb:hover',
-			]
-		);
-		$this->add_group_control(
-			Group_Control_Border::get_type(),
-			[
-				'name'     => 'box_border_hover',
-				'selector' => '{{WRAPPER}} .anw-ihb:hover',
-			]
-		);
-		$this->add_group_control(
-			Group_Control_Box_Shadow::get_type(),
-			[
-				'name'     => 'box_shadow_hover',
-				'selector' => '{{WRAPPER}} .anw-ihb:hover',
-			]
-		);
-
-		$this->end_controls_tab();
-		$this->end_controls_tabs();
 
 		$this->end_controls_section();
 	}
@@ -515,19 +430,36 @@ class ANW_Icon_Heading_Box_Widget extends \Elementor\Widget_Base {
 		$this->end_controls_section();
 	}
 
-	/* ============================ استایل: عناوین ============================ */
+	/* ============================ استایل: عناوین (در یک بخش با تب) ============================ */
 
-	private function register_title_style_controls( string $index, string $label ): void {
-		$key      = 'title_' . $index;
-		$selector = '{{WRAPPER}} .anw-ihb-' . $key;
-
+	private function register_titles_style_controls(): void {
 		$this->start_controls_section(
-			$key . '_style_section',
+			'titles_style_section',
 			[
-				'label' => $label,
+				'label' => esc_html__( 'عناوین', 'asre-nokhbegan-widgets' ),
 				'tab'   => Controls_Manager::TAB_STYLE,
 			]
 		);
+
+		$this->start_controls_tabs( 'titles_tabs' );
+		$this->add_single_title_tab( '1', esc_html__( 'عنوان اول', 'asre-nokhbegan-widgets' ) );
+		$this->add_single_title_tab( '2', esc_html__( 'عنوان دوم', 'asre-nokhbegan-widgets' ) );
+		$this->end_controls_tabs();
+
+		$this->end_controls_section();
+	}
+
+	/**
+	 * یک تب برای استایل یکی از عناوین.
+	 *
+	 * @param string $index شمارهٔ عنوان (1 یا 2).
+	 * @param string $label عنوان تب.
+	 */
+	private function add_single_title_tab( string $index, string $label ): void {
+		$key      = 'title_' . $index;
+		$selector = '{{WRAPPER}} .anw-ihb-' . $key;
+
+		$this->start_controls_tab( $key . '_tab', [ 'label' => $label ] );
 
 		$this->add_group_control(
 			Group_Control_Typography::get_type(),
@@ -537,21 +469,6 @@ class ANW_Icon_Heading_Box_Widget extends \Elementor\Widget_Base {
 			]
 		);
 
-		$this->add_responsive_control(
-			$key . '_margin',
-			[
-				'label'      => esc_html__( 'حاشیه', 'asre-nokhbegan-widgets' ),
-				'type'       => Controls_Manager::DIMENSIONS,
-				'size_units' => [ 'px', 'em', 'rem', '%' ],
-				'selectors'  => [
-					$selector => 'margin: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
-				],
-			]
-		);
-
-		$this->start_controls_tabs( $key . '_color_tabs' );
-
-		$this->start_controls_tab( $key . '_color_normal_tab', [ 'label' => esc_html__( 'عادی', 'asre-nokhbegan-widgets' ) ] );
 		$this->add_control(
 			$key . '_color',
 			[
@@ -560,22 +477,30 @@ class ANW_Icon_Heading_Box_Widget extends \Elementor\Widget_Base {
 				'selectors' => [ $selector => 'color: {{VALUE}};' ],
 			]
 		);
-		$this->end_controls_tab();
 
-		$this->start_controls_tab( $key . '_color_hover_tab', [ 'label' => esc_html__( 'هاور', 'asre-nokhbegan-widgets' ) ] );
 		$this->add_control(
 			$key . '_color_hover',
 			[
-				'label'     => esc_html__( 'رنگ', 'asre-nokhbegan-widgets' ),
+				'label'     => esc_html__( 'رنگ در هاور', 'asre-nokhbegan-widgets' ),
 				'type'      => Controls_Manager::COLOR,
 				'selectors' => [ '{{WRAPPER}} .anw-ihb:hover .anw-ihb-' . $key => 'color: {{VALUE}};' ],
 			]
 		);
+
+		$this->add_responsive_control(
+			$key . '_margin',
+			[
+				'label'      => esc_html__( 'حاشیه', 'asre-nokhbegan-widgets' ),
+				'type'       => Controls_Manager::DIMENSIONS,
+				'size_units' => [ 'px', 'em', 'rem', '%' ],
+				'separator'  => 'before',
+				'selectors'  => [
+					$selector => 'margin: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
+				],
+			]
+		);
+
 		$this->end_controls_tab();
-
-		$this->end_controls_tabs();
-
-		$this->end_controls_section();
 	}
 
 	/* ============================ استایل: متن متمایز ============================ */
@@ -665,7 +590,7 @@ class ANW_Icon_Heading_Box_Widget extends \Elementor\Widget_Base {
 		?>
 		<<?php echo esc_html( $tag ); ?> <?php $this->print_render_attribute_string( 'wrapper' ); ?>>
 			<?php if ( $icon_html ) : ?>
-				<span class="anw-ihb-icon"><?php echo $icon_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped — خروجی SVG/IMG پیش‌تر پاک‌سازی شده. ?></span>
+				<span class="anw-ihb-icon" aria-hidden="true"><?php echo $icon_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped — خروجی SVG/IMG پیش‌تر پاک‌سازی شده. ?></span>
 			<?php endif; ?>
 
 			<?php if ( ! empty( $settings['title_1'] ) || ! empty( $settings['title_2'] ) ) : ?>
