@@ -44,11 +44,27 @@ function ewe_init() {
 		return;
 	}
 
+	// بارگذاری توابع کمکی مشترک.
+	require_once EWE_PATH . 'includes/helpers.php';
+
 	// همه‌چیز آماده است.
 	add_action( 'elementor/elements/categories_registered', 'ewe_add_category' );
 	add_action( 'elementor/widgets/register', 'ewe_register_widgets' );
+	add_action( 'elementor/frontend/after_register_styles', 'ewe_register_assets' );
 }
 add_action( 'plugins_loaded', 'ewe_init' );
+
+/**
+ * ثبت دارایی‌های مشترک (CSS). فقط در صورت استفاده از ویجت بارگذاری می‌شوند.
+ */
+function ewe_register_assets() {
+	wp_register_style(
+		'ewe-widgets',
+		plugins_url( 'assets/css/widgets.css', __FILE__ ),
+		[],
+		EWE_VERSION
+	);
+}
 
 /**
  * ثبت دستهٔ سفارشی برای ویجت‌های افزونه.
@@ -72,8 +88,12 @@ function ewe_add_category( $elements_manager ) {
  */
 function ewe_register_widgets( $widgets_manager ) {
 	require_once EWE_PATH . 'widgets/class-hello-world-widget.php';
+	require_once EWE_PATH . 'widgets/class-icon-heading-box-widget.php';
+	require_once EWE_PATH . 'widgets/class-title-list-widget.php';
 
 	$widgets_manager->register( new \EWE_Hello_World_Widget() );
+	$widgets_manager->register( new \EWE_Icon_Heading_Box_Widget() );
+	$widgets_manager->register( new \EWE_Title_List_Widget() );
 }
 
 /* -------------------------------------------------------------------------
