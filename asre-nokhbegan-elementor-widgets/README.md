@@ -38,3 +38,17 @@ define( 'ANW_GITHUB_REPO', 'imiladco/asre-nokhbegan-elementor-widgets' );
 ```bash
 bash build.sh   # خروجی: dist/asre-nokhbegan-elementor-widgets.zip
 ```
+
+## انتشار خودکار روی گیت‌هاب (یک دستور)
+
+اسکریپت `publish.sh` همهٔ مراحل را خودکار می‌کند: ساخت ریپوی Public، push کد،
+و ساخت Release با پیوست فایل zip (که بروزرسانی خودکار را فعال می‌کند).
+
+پیش‌نیاز: یک Personal Access Token گیت‌هاب با اسکوپ `repo`.
+
+```bash
+GH_TOKEN=ghp_xxxxx bash publish.sh
+```
+
+پس از اجرا، ریپو و Release ساخته می‌شوند و کافی است در سایت روی «بررسی بروزرسانی» بزنید.
+برای انتشار نسخه‌های بعدی، فقط نسخه را در هدر افزونه بالا ببرید و دوباره اسکریپت را اجرا کنید.
