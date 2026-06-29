@@ -127,6 +127,7 @@ class ANW_Product_Price_Widget extends \Elementor\Widget_Base {
 				'type'         => Controls_Manager::SWITCHER,
 				'return_value' => 'yes',
 				'default'      => 'yes',
+				'description'  => esc_html__( 'این گزینه فقط هنگامی اثر دارد که قیمت ویژه هم در کنار قیمت اصلی نمایش داده شود. اگر محصول قیمت ویژه نداشته باشد، قیمت اصلی همان قیمت نهایی است و واحد پول آن همیشه نمایش داده می‌شود.', 'asre-nokhbegan-widgets' ),
 			]
 		);
 
@@ -728,6 +729,11 @@ class ANW_Product_Price_Widget extends \Elementor\Widget_Base {
 		$show_regular = ( 'yes' === $settings['show_regular'] ) && ( '' !== $price['regular'] );
 		$show_sale    = ( 'yes' === $settings['show_sale'] ) && $price['on_sale'] && ( '' !== $price['sale'] );
 
+		// واحد پولِ قیمت اصلی: اگر قیمت ویژه‌ای نمایش داده نشود، قیمت اصلی همان قیمت
+		// نهایی است و واحد پول آن همیشه نمایش داده می‌شود؛ سوییچ فقط زمانی اثر دارد که
+		// قیمت ویژه هم در کنار آن نمایش داده شود.
+		$regular_currency = ( 'yes' === $settings['regular_currency_enable'] ) || ! $show_sale;
+
 		$classes = 'anw-pp';
 		if ( $price['on_sale'] ) {
 			$classes .= ' anw-pp--on-sale';
@@ -736,7 +742,7 @@ class ANW_Product_Price_Widget extends \Elementor\Widget_Base {
 		<div class="<?php echo esc_attr( $classes ); ?>">
 			<?php
 			if ( $show_regular ) {
-				$this->render_price_block( 'regular', $price['regular'], $currency, ( 'yes' === $settings['regular_currency_enable'] ), $free_text );
+				$this->render_price_block( 'regular', $price['regular'], $currency, $regular_currency, $free_text );
 			}
 			if ( $show_sale ) {
 				$this->render_price_block( 'sale', $price['sale'], $currency, ( 'yes' === $settings['sale_currency_enable'] ), $free_text );

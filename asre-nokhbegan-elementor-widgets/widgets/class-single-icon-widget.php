@@ -367,29 +367,36 @@ class ANW_Single_Icon_Widget extends \Elementor\Widget_Base {
 	}
 
 	/**
-	 * مجموعه کنترل‌های «سایهٔ آیکون» (drop-shadow که از شکل خود آیکون پیروی می‌کند).
+	 * مجموعه کنترل‌های «سایهٔ آیکون» به‌صورت پاپ‌اور (مانند سایهٔ جعبه)؛ از نوع
+	 * drop-shadow که از شکل خود آیکون پیروی می‌کند، با مقادیر پیش‌فرض نرم و حرفه‌ای.
 	 *
 	 * @param string $prefix   پیشوند نام کنترل‌ها (برای تفکیک عادی/هاور).
 	 * @param string $selector سلکتور هدف.
 	 */
 	private function add_icon_shadow_controls( string $prefix, string $selector ): void {
 		$this->add_control(
-			$prefix . '_heading',
+			$prefix . '_toggle',
 			[
-				'label'     => esc_html__( 'سایهٔ آیکون', 'asre-nokhbegan-widgets' ),
-				'type'      => Controls_Manager::HEADING,
-				'separator' => 'before',
+				'label'        => esc_html__( 'سایهٔ آیکون', 'asre-nokhbegan-widgets' ),
+				'type'         => Controls_Manager::POPOVER_TOGGLE,
+				'label_off'    => esc_html__( 'بدون', 'asre-nokhbegan-widgets' ),
+				'label_on'     => esc_html__( 'سفارشی', 'asre-nokhbegan-widgets' ),
+				'return_value' => 'yes',
+				'separator'    => 'before',
 			]
 		);
+
+		$this->start_popover();
 
 		$this->add_control(
 			$prefix . '_color',
 			[
-				'label'     => esc_html__( 'رنگ سایه', 'asre-nokhbegan-widgets' ),
+				'label'     => esc_html__( 'رنگ', 'asre-nokhbegan-widgets' ),
 				'type'      => Controls_Manager::COLOR,
-				'default'   => 'rgba(0,0,0,0.3)',
+				'default'   => 'rgba(0, 0, 0, 0.45)',
+				'condition' => [ $prefix . '_toggle' => 'yes' ],
 				'selectors' => [
-					$selector => 'filter: drop-shadow({{' . $prefix . '_h.SIZE}}px {{' . $prefix . '_v.SIZE}}px {{' . $prefix . '_blur.SIZE}}px {{VALUE}});',
+					$selector => 'filter: drop-shadow({{' . $prefix . '_h.SIZE}}{{' . $prefix . '_h.UNIT}} {{' . $prefix . '_v.SIZE}}{{' . $prefix . '_v.UNIT}} {{' . $prefix . '_blur.SIZE}}{{' . $prefix . '_blur.UNIT}} {{VALUE}});',
 				],
 			]
 		);
@@ -397,32 +404,40 @@ class ANW_Single_Icon_Widget extends \Elementor\Widget_Base {
 		$this->add_control(
 			$prefix . '_h',
 			[
-				'label'     => esc_html__( 'افقی', 'asre-nokhbegan-widgets' ),
-				'type'      => Controls_Manager::SLIDER,
-				'range'     => [ 'px' => [ 'min' => -100, 'max' => 100 ] ],
-				'default'   => [ 'size' => 0 ],
+				'label'      => esc_html__( 'افقی', 'asre-nokhbegan-widgets' ),
+				'type'       => Controls_Manager::SLIDER,
+				'size_units' => [ 'px' ],
+				'range'      => [ 'px' => [ 'min' => -100, 'max' => 100 ] ],
+				'default'    => [ 'size' => 0, 'unit' => 'px' ],
+				'condition'  => [ $prefix . '_toggle' => 'yes' ],
 			]
 		);
 
 		$this->add_control(
 			$prefix . '_v',
 			[
-				'label'     => esc_html__( 'عمودی', 'asre-nokhbegan-widgets' ),
-				'type'      => Controls_Manager::SLIDER,
-				'range'     => [ 'px' => [ 'min' => -100, 'max' => 100 ] ],
-				'default'   => [ 'size' => 0 ],
+				'label'      => esc_html__( 'عمودی', 'asre-nokhbegan-widgets' ),
+				'type'       => Controls_Manager::SLIDER,
+				'size_units' => [ 'px' ],
+				'range'      => [ 'px' => [ 'min' => -100, 'max' => 100 ] ],
+				'default'    => [ 'size' => 8, 'unit' => 'px' ],
+				'condition'  => [ $prefix . '_toggle' => 'yes' ],
 			]
 		);
 
 		$this->add_control(
 			$prefix . '_blur',
 			[
-				'label'   => esc_html__( 'محو شدن', 'asre-nokhbegan-widgets' ),
-				'type'    => Controls_Manager::SLIDER,
-				'range'   => [ 'px' => [ 'min' => 0, 'max' => 100 ] ],
-				'default' => [ 'size' => 0 ],
+				'label'      => esc_html__( 'محو شدن', 'asre-nokhbegan-widgets' ),
+				'type'       => Controls_Manager::SLIDER,
+				'size_units' => [ 'px' ],
+				'range'      => [ 'px' => [ 'min' => 0, 'max' => 100 ] ],
+				'default'    => [ 'size' => 16, 'unit' => 'px' ],
+				'condition'  => [ $prefix . '_toggle' => 'yes' ],
 			]
 		);
+
+		$this->end_popover();
 	}
 
 	/* ============================ رندر ============================ */
