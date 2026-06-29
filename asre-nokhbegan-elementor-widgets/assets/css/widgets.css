@@ -97,6 +97,34 @@
 	transition: all 0.3s ease;
 }
 
+/* ---------- ابزارک: قیمت محصول (ووکامرس) ---------- */
+.anw-pp {
+	display: flex;
+	flex-direction: row;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 8px;
+}
+
+.anw-pp-price {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+}
+
+.anw-pp-amount,
+.anw-pp-currency {
+	display: inline-block;
+}
+
+.anw-pp-notice {
+	padding: 8px 12px;
+	background: #fff3cd;
+	color: #664d03;
+	border-radius: 4px;
+	font-size: 13px;
+}
+
 /* ---------- ابزارک: لیست عنوان‌ها ---------- */
 .anw-list {
 	display: flex;
