@@ -15,7 +15,6 @@ use Elementor\Controls_Manager;
 use Elementor\Group_Control_Typography;
 use Elementor\Group_Control_Background;
 use Elementor\Group_Control_Border;
-use Elementor\Group_Control_Box_Shadow;
 
 /**
  * Class ANW_Product_Price_Widget
@@ -53,9 +52,8 @@ class ANW_Product_Price_Widget extends \Elementor\Widget_Base {
 	protected function register_controls(): void {
 		$this->register_content_controls();
 		$this->register_layout_controls();
-		$this->register_container_style_controls();
-		$this->register_price_block_style_controls( 'regular', esc_html__( 'قیمت اصلی', 'asre-nokhbegan-widgets' ), true );
-		$this->register_price_block_style_controls( 'sale', esc_html__( 'قیمت فروش فوق‌العاده', 'asre-nokhbegan-widgets' ), false );
+		$this->register_price_block_style_controls( 'regular', esc_html__( 'قیمت اصلی', 'asre-nokhbegan-widgets' ), true, 'show_regular' );
+		$this->register_price_block_style_controls( 'sale', esc_html__( 'قیمت فروش فوق‌العاده', 'asre-nokhbegan-widgets' ), false, 'show_sale' );
 	}
 
 	/* ============================ محتوا ============================ */
@@ -206,8 +204,9 @@ class ANW_Product_Price_Widget extends \Elementor\Widget_Base {
 			]
 		);
 
+		// توزیع (محور اصلی) و تراز (محور متقاطع) بسته به جهت چیدمان، آیکون و معنای متفاوت دارند.
 		$this->add_responsive_control(
-			'price_justify',
+			'price_justify_h',
 			[
 				'label'     => esc_html__( 'توزیع افقی', 'asre-nokhbegan-widgets' ),
 				'type'      => Controls_Manager::CHOOSE,
@@ -230,6 +229,7 @@ class ANW_Product_Price_Widget extends \Elementor\Widget_Base {
 						'icon'  => 'eicon-flex eicon-justify-space-between-h',
 					],
 				],
+				'condition' => [ 'price_direction' => 'row' ],
 				'selectors' => [
 					'{{WRAPPER}} .anw-pp' => 'justify-content: {{VALUE}};',
 				],
@@ -237,14 +237,14 @@ class ANW_Product_Price_Widget extends \Elementor\Widget_Base {
 		);
 
 		$this->add_responsive_control(
-			'price_align',
+			'price_align_v',
 			[
 				'label'     => esc_html__( 'تراز عمودی', 'asre-nokhbegan-widgets' ),
 				'type'      => Controls_Manager::CHOOSE,
 				'default'   => 'center',
 				'options'   => [
 					'flex-start' => [
-						'title' => esc_html__( 'شروع', 'asre-nokhbegan-widgets' ),
+						'title' => esc_html__( 'بالا', 'asre-nokhbegan-widgets' ),
 						'icon'  => 'eicon-align-start-v',
 					],
 					'center'     => [
@@ -252,14 +252,77 @@ class ANW_Product_Price_Widget extends \Elementor\Widget_Base {
 						'icon'  => 'eicon-align-center-v',
 					],
 					'flex-end'   => [
-						'title' => esc_html__( 'پایان', 'asre-nokhbegan-widgets' ),
+						'title' => esc_html__( 'پایین', 'asre-nokhbegan-widgets' ),
 						'icon'  => 'eicon-align-end-v',
 					],
-					'baseline'   => [
-						'title' => esc_html__( 'خط پایه', 'asre-nokhbegan-widgets' ),
+					'stretch'    => [
+						'title' => esc_html__( 'کشیده', 'asre-nokhbegan-widgets' ),
 						'icon'  => 'eicon-align-stretch-v',
 					],
 				],
+				'condition' => [ 'price_direction' => 'row' ],
+				'selectors' => [
+					'{{WRAPPER}} .anw-pp' => 'align-items: {{VALUE}};',
+				],
+			]
+		);
+
+		$this->add_responsive_control(
+			'price_justify_v',
+			[
+				'label'     => esc_html__( 'توزیع عمودی', 'asre-nokhbegan-widgets' ),
+				'type'      => Controls_Manager::CHOOSE,
+				'default'   => 'flex-start',
+				'options'   => [
+					'flex-start'    => [
+						'title' => esc_html__( 'بالا', 'asre-nokhbegan-widgets' ),
+						'icon'  => 'eicon-flex eicon-justify-start-v',
+					],
+					'center'        => [
+						'title' => esc_html__( 'وسط', 'asre-nokhbegan-widgets' ),
+						'icon'  => 'eicon-flex eicon-justify-center-v',
+					],
+					'flex-end'      => [
+						'title' => esc_html__( 'پایین', 'asre-nokhbegan-widgets' ),
+						'icon'  => 'eicon-flex eicon-justify-end-v',
+					],
+					'space-between' => [
+						'title' => esc_html__( 'دو سرِ کادر', 'asre-nokhbegan-widgets' ),
+						'icon'  => 'eicon-flex eicon-justify-space-between-v',
+					],
+				],
+				'condition' => [ 'price_direction' => 'column' ],
+				'selectors' => [
+					'{{WRAPPER}} .anw-pp' => 'justify-content: {{VALUE}};',
+				],
+			]
+		);
+
+		$this->add_responsive_control(
+			'price_align_h',
+			[
+				'label'     => esc_html__( 'تراز افقی', 'asre-nokhbegan-widgets' ),
+				'type'      => Controls_Manager::CHOOSE,
+				'default'   => 'flex-start',
+				'options'   => [
+					'flex-start' => [
+						'title' => esc_html__( 'شروع', 'asre-nokhbegan-widgets' ),
+						'icon'  => 'eicon-align-start-h',
+					],
+					'center'     => [
+						'title' => esc_html__( 'وسط', 'asre-nokhbegan-widgets' ),
+						'icon'  => 'eicon-align-center-h',
+					],
+					'flex-end'   => [
+						'title' => esc_html__( 'پایان', 'asre-nokhbegan-widgets' ),
+						'icon'  => 'eicon-align-end-h',
+					],
+					'stretch'    => [
+						'title' => esc_html__( 'کشیده', 'asre-nokhbegan-widgets' ),
+						'icon'  => 'eicon-align-stretch-h',
+					],
+				],
+				'condition' => [ 'price_direction' => 'column' ],
 				'selectors' => [
 					'{{WRAPPER}} .anw-pp' => 'align-items: {{VALUE}};',
 				],
@@ -283,97 +346,39 @@ class ANW_Product_Price_Widget extends \Elementor\Widget_Base {
 		$this->end_controls_section();
 	}
 
-	/* ============================ استایل: کانتینر ============================ */
-
-	private function register_container_style_controls(): void {
-		$this->start_controls_section(
-			'container_style_section',
-			[
-				'label' => esc_html__( 'کادر کلی', 'asre-nokhbegan-widgets' ),
-				'tab'   => Controls_Manager::TAB_STYLE,
-			]
-		);
-
-		$this->add_responsive_control(
-			'container_padding',
-			[
-				'label'      => esc_html__( 'پدینگ', 'asre-nokhbegan-widgets' ),
-				'type'       => Controls_Manager::DIMENSIONS,
-				'size_units' => [ 'px', 'em', 'rem', '%' ],
-				'selectors'  => [
-					'{{WRAPPER}} .anw-pp' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
-				],
-			]
-		);
-
-		$this->add_responsive_control(
-			'container_radius',
-			[
-				'label'      => esc_html__( 'گردی گوشه', 'asre-nokhbegan-widgets' ),
-				'type'       => Controls_Manager::DIMENSIONS,
-				'size_units' => [ 'px', 'em', 'rem', '%' ],
-				'selectors'  => [
-					'{{WRAPPER}} .anw-pp' => 'border-radius: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
-				],
-			]
-		);
-
-		$this->add_group_control(
-			Group_Control_Background::get_type(),
-			[
-				'name'     => 'container_bg',
-				'types'    => [ 'classic', 'gradient' ],
-				'selector' => '{{WRAPPER}} .anw-pp',
-			]
-		);
-
-		$this->add_group_control(
-			Group_Control_Border::get_type(),
-			[
-				'name'     => 'container_border',
-				'selector' => '{{WRAPPER}} .anw-pp',
-			]
-		);
-
-		$this->add_group_control(
-			Group_Control_Box_Shadow::get_type(),
-			[
-				'name'     => 'container_shadow',
-				'selector' => '{{WRAPPER}} .anw-pp',
-			]
-		);
-
-		$this->end_controls_section();
-	}
-
 	/* ============================ استایل: هر بلوک قیمت ============================ */
 
 	/**
 	 * ثبت کنترل‌های استایل یک بلوک قیمت (اصلی یا فروش).
 	 *
-	 * @param string $key       کلید بلوک: regular یا sale.
-	 * @param string $label     عنوان بخش.
-	 * @param bool   $is_regular آیا این بلوک قیمت اصلی است (برای گزینهٔ خط‌خوردگی).
+	 * @param string $key        کلید بلوک: regular یا sale.
+	 * @param string $label      عنوان بخش.
+	 * @param bool   $is_regular  آیا این بلوک قیمت اصلی است (برای گزینهٔ خط‌خوردگی).
+	 * @param string $show_key    نام کنترل سوییچ نمایش این بلوک (برای شرط نمایش کل بخش).
 	 */
-	private function register_price_block_style_controls( string $key, string $label, bool $is_regular ): void {
-		$block    = '{{WRAPPER}} .anw-pp-' . $key;
-		$amount   = $block . ' .anw-pp-amount';
-		$currency = $block . ' .anw-pp-currency';
+	private function register_price_block_style_controls( string $key, string $label, bool $is_regular, string $show_key ): void {
+		$block        = '{{WRAPPER}} .anw-pp-' . $key;
+		$amount       = $block . ' .anw-pp-amount';
+		$currency     = $block . ' .anw-pp-currency';
+		$enable_key   = $key . '_currency_enable';
+		$custom_key   = $key . '_currency_custom';
 
 		$this->start_controls_section(
 			$key . '_style_section',
 			[
-				'label' => $label,
-				'tab'   => Controls_Manager::TAB_STYLE,
+				'label'     => $label,
+				'tab'       => Controls_Manager::TAB_STYLE,
+				'condition' => [ $show_key => 'yes' ],
 			]
 		);
 
-		/* --- چیدمان داخلی: عدد و واحد پول --- */
+		/* --- چیدمان داخلی: عدد و واحد پول (فقط وقتی واحد پول فعال است) --- */
 		$this->add_control(
 			$key . '_inner_heading',
 			[
-				'label' => esc_html__( 'چیدمان عدد و واحد پول', 'asre-nokhbegan-widgets' ),
-				'type'  => Controls_Manager::HEADING,
+				'label'     => esc_html__( 'چیدمان عدد و واحد پول', 'asre-nokhbegan-widgets' ),
+				'type'      => Controls_Manager::HEADING,
+				'condition' => [ $enable_key => 'yes' ],
 			]
 		);
 
@@ -397,6 +402,7 @@ class ANW_Product_Price_Widget extends \Elementor\Widget_Base {
 					'before' => 'order: -1;',
 					'after'  => 'order: 2;',
 				],
+				'condition'            => [ $enable_key => 'yes' ],
 				'selectors'            => [
 					$currency => '{{VALUE}}',
 				],
@@ -406,7 +412,7 @@ class ANW_Product_Price_Widget extends \Elementor\Widget_Base {
 		$this->add_responsive_control(
 			$key . '_inner_align',
 			[
-				'label'     => esc_html__( 'تراز عمودی', 'asre-nokhbegan-widgets' ),
+				'label'     => esc_html__( 'تراز عمودی عدد و واحد', 'asre-nokhbegan-widgets' ),
 				'type'      => Controls_Manager::CHOOSE,
 				'default'   => 'center',
 				'options'   => [
@@ -427,6 +433,7 @@ class ANW_Product_Price_Widget extends \Elementor\Widget_Base {
 						'icon'  => 'eicon-align-stretch-v',
 					],
 				],
+				'condition' => [ $enable_key => 'yes' ],
 				'selectors' => [
 					$block => 'align-items: {{VALUE}};',
 				],
@@ -441,6 +448,7 @@ class ANW_Product_Price_Widget extends \Elementor\Widget_Base {
 				'size_units' => [ 'px', 'em', 'rem' ],
 				'range'      => [ 'px' => [ 'min' => 0, 'max' => 60 ] ],
 				'default'    => [ 'size' => 4 ],
+				'condition'  => [ $enable_key => 'yes' ],
 				'selectors'  => [
 					$block => 'gap: {{SIZE}}{{UNIT}};',
 				],
@@ -491,6 +499,7 @@ class ANW_Product_Price_Widget extends \Elementor\Widget_Base {
 		);
 
 		if ( $is_regular ) {
+			// خط‌خوردگی یک‌دست روی هم عدد و هم واحد پول.
 			$this->add_control(
 				'regular_strike',
 				[
@@ -499,19 +508,19 @@ class ANW_Product_Price_Widget extends \Elementor\Widget_Base {
 					'return_value' => 'yes',
 					'default'      => 'yes',
 					'separator'    => 'before',
-					'description'  => esc_html__( 'وقتی محصول فروش ویژه دارد، روی قیمت اصلی خط کشیده می‌شود.', 'asre-nokhbegan-widgets' ),
+					'description'  => esc_html__( 'وقتی محصول فروش ویژه دارد، روی کل قیمت اصلی (عدد و واحد) خط کشیده می‌شود.', 'asre-nokhbegan-widgets' ),
 					'selectors'    => [
-						'{{WRAPPER}} .anw-pp--on-sale .anw-pp-regular .anw-pp-amount' => 'text-decoration: line-through;',
+						'{{WRAPPER}} .anw-pp--on-sale .anw-pp-regular .anw-pp-amount, {{WRAPPER}} .anw-pp--on-sale .anw-pp-regular .anw-pp-currency' => 'text-decoration: line-through;',
 					],
 				]
 			);
 		}
 
-		/* --- استایل عدد --- */
+		/* --- استایل کلی قیمت و واحد (روی کل بلوک؛ عدد و واحد ارث می‌برند) --- */
 		$this->add_control(
-			$key . '_amount_heading',
+			$key . '_general_heading',
 			[
-				'label'     => esc_html__( 'عدد قیمت', 'asre-nokhbegan-widgets' ),
+				'label'     => esc_html__( 'استایل کلی قیمت و واحد', 'asre-nokhbegan-widgets' ),
 				'type'      => Controls_Manager::HEADING,
 				'separator' => 'before',
 			]
@@ -520,35 +529,43 @@ class ANW_Product_Price_Widget extends \Elementor\Widget_Base {
 		$this->add_group_control(
 			Group_Control_Typography::get_type(),
 			[
-				'name'     => $key . '_amount_typography',
-				'selector' => $amount,
+				'name'     => $key . '_typography',
+				'selector' => $block,
 			]
 		);
 
 		$this->add_control(
-			$key . '_amount_color',
+			$key . '_color',
 			[
-				'label'     => esc_html__( 'رنگ عدد', 'asre-nokhbegan-widgets' ),
+				'label'     => esc_html__( 'رنگ', 'asre-nokhbegan-widgets' ),
 				'type'      => Controls_Manager::COLOR,
-				'selectors' => [ $amount => 'color: {{VALUE}};' ],
+				'selectors' => [ $block => 'color: {{VALUE}};' ],
 			]
 		);
 
-		/* --- استایل واحد پول --- */
+		/* --- استایل منحصربه‌فرد واحد پول (اختیاری) --- */
 		$this->add_control(
-			$key . '_currency_style_heading',
+			$custom_key,
 			[
-				'label'     => esc_html__( 'واحد پول', 'asre-nokhbegan-widgets' ),
-				'type'      => Controls_Manager::HEADING,
-				'separator' => 'before',
+				'label'        => esc_html__( 'استایل منحصربه‌فرد واحد پول', 'asre-nokhbegan-widgets' ),
+				'type'         => Controls_Manager::SWITCHER,
+				'return_value' => 'yes',
+				'default'      => '',
+				'separator'    => 'before',
+				'description'  => esc_html__( 'با فعال‌کردن، می‌توانید برای واحد پول این قیمت استایل جداگانه‌ای جدا از عدد تعیین کنید.', 'asre-nokhbegan-widgets' ),
+				'condition'    => [ $enable_key => 'yes' ],
 			]
 		);
 
 		$this->add_group_control(
 			Group_Control_Typography::get_type(),
 			[
-				'name'     => $key . '_currency_typography',
-				'selector' => $currency,
+				'name'      => $key . '_currency_typography',
+				'selector'  => $currency,
+				'condition' => [
+					$enable_key => 'yes',
+					$custom_key => 'yes',
+				],
 			]
 		);
 
@@ -558,6 +575,10 @@ class ANW_Product_Price_Widget extends \Elementor\Widget_Base {
 				'label'     => esc_html__( 'رنگ واحد پول', 'asre-nokhbegan-widgets' ),
 				'type'      => Controls_Manager::COLOR,
 				'selectors' => [ $currency => 'color: {{VALUE}};' ],
+				'condition' => [
+					$enable_key => 'yes',
+					$custom_key => 'yes',
+				],
 			]
 		);
 

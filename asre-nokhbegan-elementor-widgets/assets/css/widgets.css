@@ -104,6 +104,7 @@
 	flex-wrap: wrap;
 	align-items: center;
 	gap: 8px;
+	width: 100%;
 }
 
 .anw-pp-price {
