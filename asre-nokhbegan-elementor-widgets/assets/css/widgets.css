@@ -72,6 +72,31 @@
 	transition: color 0.3s ease;
 }
 
+/* ---------- ابزارک: آیکون تکی ---------- */
+.anw-ico {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	text-decoration: none;
+	transition: all 0.3s ease;
+	max-width: 100%;
+}
+
+.anw-ico-icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	line-height: 0;
+}
+
+.anw-ico-icon img,
+.anw-ico-icon svg {
+	display: block;
+	width: 64px;
+	height: auto;
+	transition: all 0.3s ease;
+}
+
 /* ---------- ابزارک: لیست عنوان‌ها ---------- */
 .anw-list {
 	display: flex;

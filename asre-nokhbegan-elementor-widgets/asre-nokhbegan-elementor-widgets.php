@@ -3,7 +3,7 @@
  * Plugin Name: Asre Nokhbegan – Elementor Widgets
  * Plugin URI:  https://asrenokhbegan.com
  * Description: ابزارک‌های اختصاصی المنتور برای وب‌سایت عصر نخبگان.
- * Version:     1.3.1
+ * Version:     1.4.0
  * Author:      imiladco
  * Author URI:  https://asrenokhbegan.com
  * Text Domain: asre-nokhbegan-widgets
@@ -18,7 +18,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit; // جلوگیری از دسترسی مستقیم.
 }
 
-define( 'ANW_VERSION', '1.3.1' );
+define( 'ANW_VERSION', '1.4.0' );
 define( 'ANW_MINIMUM_ELEMENTOR_VERSION', '3.25.0' );
 define( 'ANW_MINIMUM_PHP_VERSION', '7.4' );
 define( 'ANW_FILE', __FILE__ );
@@ -122,10 +122,12 @@ function anw_add_category( $elements_manager ) {
 function anw_register_widgets( $widgets_manager ) {
 	require_once ANW_PATH . 'widgets/class-icon-heading-box-widget.php';
 	require_once ANW_PATH . 'widgets/class-icon-title-widget.php';
+	require_once ANW_PATH . 'widgets/class-single-icon-widget.php';
 	require_once ANW_PATH . 'widgets/class-title-list-widget.php';
 
 	$widgets_manager->register( new \ANW_Icon_Heading_Box_Widget() );
 	$widgets_manager->register( new \ANW_Icon_Title_Widget() );
+	$widgets_manager->register( new \ANW_Single_Icon_Widget() );
 	$widgets_manager->register( new \ANW_Title_List_Widget() );
 }
 
