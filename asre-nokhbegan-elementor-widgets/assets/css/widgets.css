@@ -113,6 +113,11 @@
 	gap: 4px;
 }
 
+/* قیمت پیشین (پیش از تخفیف) به‌صورت پیش‌فرض کمی کم‌رنگ‌تر است. */
+.anw-pp-old {
+	opacity: 0.7;
+}
+
 .anw-pp-amount,
 .anw-pp-currency {
 	display: inline-block;

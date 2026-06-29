@@ -1,8 +1,10 @@
 <?php
 /**
- * ابزارک «قیمت محصول» (ووکامرس) — نمایش قیمت اصلی و قیمت فروش فوق‌العاده
- * با کنترل کامل فلکس، واحد پول مستقل برای هر قیمت و پشتیبانی از محصول متغیر
- * (نمایش کمترین قیمت ممکن).
+ * ابزارک «قیمت محصول» (ووکامرس) — بر پایهٔ «نقش» قیمت‌ها:
+ *   • قیمت فعلی  : قیمتی که مشتری می‌پردازد (همیشه نمایش داده می‌شود، استایل شاخص).
+ *   • قیمت پیشین : قیمت پیش از تخفیف (فقط هنگام فروش ویژه، خط‌خورده و کم‌رنگ‌تر).
+ * هنگامی که محصول فروش ویژه ندارد، قیمت اصلی همان «قیمت فعلی» است و با استایل
+ * قیمت فعلی نمایش داده می‌شود. برای محصول متغیر، کمترین قیمت ممکن استفاده می‌شود.
  *
  * @package AsreNokhbeganWidgets
  */
@@ -52,8 +54,8 @@ class ANW_Product_Price_Widget extends \Elementor\Widget_Base {
 	protected function register_controls(): void {
 		$this->register_content_controls();
 		$this->register_layout_controls();
-		$this->register_price_block_style_controls( 'regular', esc_html__( 'قیمت اصلی', 'asre-nokhbegan-widgets' ), true, 'show_regular' );
-		$this->register_price_block_style_controls( 'sale', esc_html__( 'قیمت فروش فوق‌العاده', 'asre-nokhbegan-widgets' ), false, 'show_sale' );
+		$this->register_price_block_style_controls( 'current', esc_html__( 'قیمت فعلی', 'asre-nokhbegan-widgets' ), false, '' );
+		$this->register_price_block_style_controls( 'old', esc_html__( 'قیمت پیش از تخفیف', 'asre-nokhbegan-widgets' ), true, 'show_old' );
 	}
 
 	/* ============================ محتوا ============================ */
@@ -79,24 +81,14 @@ class ANW_Product_Price_Widget extends \Elementor\Widget_Base {
 		);
 
 		$this->add_control(
-			'show_regular',
+			'show_old',
 			[
-				'label'        => esc_html__( 'نمایش قیمت اصلی', 'asre-nokhbegan-widgets' ),
+				'label'        => esc_html__( 'نمایش قیمت پیش از تخفیف', 'asre-nokhbegan-widgets' ),
 				'type'         => Controls_Manager::SWITCHER,
 				'return_value' => 'yes',
 				'default'      => 'yes',
 				'separator'    => 'before',
-			]
-		);
-
-		$this->add_control(
-			'show_sale',
-			[
-				'label'        => esc_html__( 'نمایش قیمت فروش فوق‌العاده', 'asre-nokhbegan-widgets' ),
-				'type'         => Controls_Manager::SWITCHER,
-				'return_value' => 'yes',
-				'default'      => 'yes',
-				'description'  => esc_html__( 'فقط در صورتی نمایش داده می‌شود که محصول فروش ویژه (تخفیف) داشته باشد.', 'asre-nokhbegan-widgets' ),
+				'description'  => esc_html__( 'قیمت قدیم (خط‌خورده) فقط هنگامی نمایش داده می‌شود که محصول فروش ویژه داشته باشد.', 'asre-nokhbegan-widgets' ),
 			]
 		);
 
@@ -121,20 +113,19 @@ class ANW_Product_Price_Widget extends \Elementor\Widget_Base {
 		);
 
 		$this->add_control(
-			'regular_currency_enable',
+			'current_currency_enable',
 			[
-				'label'        => esc_html__( 'واحد پول برای قیمت اصلی', 'asre-nokhbegan-widgets' ),
+				'label'        => esc_html__( 'واحد پول برای قیمت فعلی', 'asre-nokhbegan-widgets' ),
 				'type'         => Controls_Manager::SWITCHER,
 				'return_value' => 'yes',
 				'default'      => 'yes',
-				'description'  => esc_html__( 'این گزینه فقط هنگامی اثر دارد که قیمت ویژه هم در کنار قیمت اصلی نمایش داده شود. اگر محصول قیمت ویژه نداشته باشد، قیمت اصلی همان قیمت نهایی است و واحد پول آن همیشه نمایش داده می‌شود.', 'asre-nokhbegan-widgets' ),
 			]
 		);
 
 		$this->add_control(
-			'sale_currency_enable',
+			'old_currency_enable',
 			[
-				'label'        => esc_html__( 'واحد پول برای قیمت فروش', 'asre-nokhbegan-widgets' ),
+				'label'        => esc_html__( 'واحد پول برای قیمت پیشین', 'asre-nokhbegan-widgets' ),
 				'type'         => Controls_Manager::SWITCHER,
 				'return_value' => 'yes',
 				'default'      => 'yes',
@@ -193,14 +184,14 @@ class ANW_Product_Price_Widget extends \Elementor\Widget_Base {
 		);
 
 		$this->add_control(
-			'sale_first',
+			'old_first',
 			[
-				'label'        => esc_html__( 'نمایش قیمت فروش پیش از قیمت اصلی', 'asre-nokhbegan-widgets' ),
+				'label'        => esc_html__( 'نمایش قیمت پیشین پیش از قیمت فعلی', 'asre-nokhbegan-widgets' ),
 				'type'         => Controls_Manager::SWITCHER,
 				'return_value' => 'yes',
-				'default'      => '',
+				'default'      => 'yes',
 				'selectors'    => [
-					'{{WRAPPER}} .anw-pp-sale' => 'order: -1;',
+					'{{WRAPPER}} .anw-pp-old' => 'order: -1;',
 				],
 			]
 		);
@@ -350,28 +341,29 @@ class ANW_Product_Price_Widget extends \Elementor\Widget_Base {
 	/* ============================ استایل: هر بلوک قیمت ============================ */
 
 	/**
-	 * ثبت کنترل‌های استایل یک بلوک قیمت (اصلی یا فروش).
+	 * ثبت کنترل‌های استایل یک بلوک قیمت بر اساس نقش.
 	 *
-	 * @param string $key        کلید بلوک: regular یا sale.
-	 * @param string $label      عنوان بخش.
-	 * @param bool   $is_regular  آیا این بلوک قیمت اصلی است (برای گزینهٔ خط‌خوردگی).
-	 * @param string $show_key    نام کنترل سوییچ نمایش این بلوک (برای شرط نمایش کل بخش).
+	 * @param string $key       کلید بلوک: current یا old.
+	 * @param string $label     عنوان بخش.
+	 * @param bool   $has_strike آیا گزینهٔ خط‌خوردگی داشته باشد (برای قیمت پیشین).
+	 * @param string $show_key  نام کنترل سوییچ نمایش این بلوک (خالی = همیشه نمایش).
 	 */
-	private function register_price_block_style_controls( string $key, string $label, bool $is_regular, string $show_key ): void {
-		$block        = '{{WRAPPER}} .anw-pp-' . $key;
-		$amount       = $block . ' .anw-pp-amount';
-		$currency     = $block . ' .anw-pp-currency';
-		$enable_key   = $key . '_currency_enable';
-		$custom_key   = $key . '_currency_custom';
+	private function register_price_block_style_controls( string $key, string $label, bool $has_strike, string $show_key ): void {
+		$block      = '{{WRAPPER}} .anw-pp-' . $key;
+		$amount     = $block . ' .anw-pp-amount';
+		$currency   = $block . ' .anw-pp-currency';
+		$enable_key = $key . '_currency_enable';
+		$custom_key = $key . '_currency_custom';
 
-		$this->start_controls_section(
-			$key . '_style_section',
-			[
-				'label'     => $label,
-				'tab'       => Controls_Manager::TAB_STYLE,
-				'condition' => [ $show_key => 'yes' ],
-			]
-		);
+		$section_args = [
+			'label' => $label,
+			'tab'   => Controls_Manager::TAB_STYLE,
+		];
+		if ( '' !== $show_key ) {
+			$section_args['condition'] = [ $show_key => 'yes' ];
+		}
+
+		$this->start_controls_section( $key . '_style_section', $section_args );
 
 		/* --- چیدمان داخلی: عدد و واحد پول (فقط وقتی واحد پول فعال است) --- */
 		$this->add_control(
@@ -499,19 +491,19 @@ class ANW_Product_Price_Widget extends \Elementor\Widget_Base {
 			]
 		);
 
-		if ( $is_regular ) {
-			// خط‌خوردگی یک‌دست روی هم عدد و هم واحد پول.
+		if ( $has_strike ) {
+			// خط‌خوردگی یک‌دست روی هم عدد و هم واحد پول قیمت پیشین.
 			$this->add_control(
-				'regular_strike',
+				$key . '_strike',
 				[
-					'label'        => esc_html__( 'خط‌خورده هنگام فروش ویژه', 'asre-nokhbegan-widgets' ),
+					'label'        => esc_html__( 'خط‌خورده', 'asre-nokhbegan-widgets' ),
 					'type'         => Controls_Manager::SWITCHER,
 					'return_value' => 'yes',
 					'default'      => 'yes',
 					'separator'    => 'before',
-					'description'  => esc_html__( 'وقتی محصول فروش ویژه دارد، روی کل قیمت اصلی (عدد و واحد) خط کشیده می‌شود.', 'asre-nokhbegan-widgets' ),
+					'description'  => esc_html__( 'روی کل قیمت پیشین (عدد و واحد) خط کشیده می‌شود.', 'asre-nokhbegan-widgets' ),
 					'selectors'    => [
-						'{{WRAPPER}} .anw-pp--on-sale .anw-pp-regular .anw-pp-amount, {{WRAPPER}} .anw-pp--on-sale .anw-pp-regular .anw-pp-currency' => 'text-decoration: line-through;',
+						$amount . ', ' . $currency => 'text-decoration: line-through;',
 					],
 				]
 			);
@@ -613,15 +605,15 @@ class ANW_Product_Price_Widget extends \Elementor\Widget_Base {
 	}
 
 	/**
-	 * استخراج قیمت اصلی و فروش با پشتیبانی از محصول متغیر (کمترین قیمت).
+	 * استخراج قیمت‌ها بر اساس نقش، با پشتیبانی از محصول متغیر (کمترین قیمت).
 	 *
 	 * @param \WC_Product|false $product محصول.
-	 * @return array{regular:string,sale:string,on_sale:bool,has_price:bool}
+	 * @return array{current:string,old:string,on_sale:bool,has_price:bool}
 	 */
 	private function get_price_data( $product ): array {
 		$data = [
-			'regular'   => '',
-			'sale'      => '',
+			'current'   => '',
+			'old'       => '',
 			'on_sale'   => false,
 			'has_price' => false,
 		];
@@ -635,35 +627,33 @@ class ANW_Product_Price_Widget extends \Elementor\Widget_Base {
 			$regular = $product->get_variation_regular_price( 'min', true );
 			$active  = $product->get_variation_price( 'min', true );
 
-			$data['regular'] = ( '' === $regular ) ? '' : (string) $regular;
-
 			if ( '' !== $regular && '' !== $active && (float) $active < (float) $regular ) {
-				$data['sale']    = (string) $active;
+				$data['current'] = (string) $active;
+				$data['old']     = (string) $regular;
 				$data['on_sale'] = true;
+			} else {
+				$data['current'] = ( '' === $active ) ? (string) $regular : (string) $active;
 			}
 
-			$data['has_price'] = ( '' !== $data['regular'] );
+			$data['has_price'] = ( '' !== $data['current'] );
 
 			return $data;
 		}
 
 		// محصول ساده و سایر انواع.
 		$regular = $product->get_regular_price();
-		if ( '' === $regular ) {
-			// برخی انواع (یا قیمت محاسبه‌شده) قیمت اصلی مستقیم ندارند.
-			$regular = $product->get_price();
-		}
-		$data['regular'] = ( '' === $regular || null === $regular ) ? '' : (string) $regular;
+		$sale    = $product->get_sale_price();
 
-		if ( $product->is_on_sale() ) {
-			$sale = $product->get_sale_price();
-			if ( '' !== $sale && null !== $sale ) {
-				$data['sale']    = (string) $sale;
-				$data['on_sale'] = true;
-			}
+		if ( $product->is_on_sale() && '' !== $sale && null !== $sale ) {
+			$data['current'] = (string) $sale;
+			$data['old']     = ( '' === $regular || null === $regular ) ? '' : (string) $regular;
+			$data['on_sale'] = true;
+		} else {
+			$current = ( '' === $regular || null === $regular ) ? $product->get_price() : $regular;
+			$data['current'] = ( '' === $current || null === $current ) ? '' : (string) $current;
 		}
 
-		$data['has_price'] = ( '' !== $data['regular'] || '' !== $data['sale'] );
+		$data['has_price'] = ( '' !== $data['current'] );
 
 		return $data;
 	}
@@ -706,11 +696,11 @@ class ANW_Product_Price_Widget extends \Elementor\Widget_Base {
 		$product  = $this->resolve_product( $settings );
 		$price    = $this->get_price_data( $product );
 
-		// در ویرایشگر، اگر محصولی در دسترس نیست، دادهٔ نمونه نمایش بده.
+		// در ویرایشگر، اگر محصولی در دسترس نیست، دادهٔ نمونه (در حالت فروش ویژه) نمایش بده.
 		if ( ! $price['has_price'] && $this->is_edit_mode() ) {
 			$price = [
-				'regular'   => '250000',
-				'sale'      => '199000',
+				'current'   => '199000',
+				'old'       => '250000',
 				'on_sale'   => true,
 				'has_price' => true,
 			];
@@ -725,27 +715,17 @@ class ANW_Product_Price_Widget extends \Elementor\Widget_Base {
 			$currency = function_exists( 'get_woocommerce_currency_symbol' ) ? get_woocommerce_currency_symbol() : '';
 		}
 
-		$free_text    = isset( $settings['free_text'] ) ? (string) $settings['free_text'] : '';
-		$show_regular = ( 'yes' === $settings['show_regular'] ) && ( '' !== $price['regular'] );
-		$show_sale    = ( 'yes' === $settings['show_sale'] ) && $price['on_sale'] && ( '' !== $price['sale'] );
-
-		// واحد پولِ قیمت اصلی: اگر قیمت ویژه‌ای نمایش داده نشود، قیمت اصلی همان قیمت
-		// نهایی است و واحد پول آن همیشه نمایش داده می‌شود؛ سوییچ فقط زمانی اثر دارد که
-		// قیمت ویژه هم در کنار آن نمایش داده شود.
-		$regular_currency = ( 'yes' === $settings['regular_currency_enable'] ) || ! $show_sale;
-
-		$classes = 'anw-pp';
-		if ( $price['on_sale'] ) {
-			$classes .= ' anw-pp--on-sale';
-		}
+		$free_text = isset( $settings['free_text'] ) ? (string) $settings['free_text'] : '';
+		$show_old  = $price['on_sale'] && ( 'yes' === $settings['show_old'] ) && ( '' !== $price['old'] );
 		?>
-		<div class="<?php echo esc_attr( $classes ); ?>">
+		<div class="anw-pp">
 			<?php
-			if ( $show_regular ) {
-				$this->render_price_block( 'regular', $price['regular'], $currency, $regular_currency, $free_text );
-			}
-			if ( $show_sale ) {
-				$this->render_price_block( 'sale', $price['sale'], $currency, ( 'yes' === $settings['sale_currency_enable'] ), $free_text );
+			// قیمت فعلی: همیشه نمایش داده می‌شود، با استایل شاخص.
+			$this->render_price_block( 'current', $price['current'], $currency, ( 'yes' === $settings['current_currency_enable'] ), $free_text );
+
+			// قیمت پیشین: فقط هنگام فروش ویژه.
+			if ( $show_old ) {
+				$this->render_price_block( 'old', $price['old'], $currency, ( 'yes' === $settings['old_currency_enable'] ), $free_text );
 			}
 			?>
 		</div>
@@ -755,7 +735,7 @@ class ANW_Product_Price_Widget extends \Elementor\Widget_Base {
 	/**
 	 * رندر یک بلوک قیمت.
 	 *
-	 * @param string $type          regular یا sale.
+	 * @param string $type          current یا old.
 	 * @param string $amount_raw    مقدار خام قیمت.
 	 * @param string $currency      متن واحد پول.
 	 * @param bool   $show_currency نمایش واحد پول.
