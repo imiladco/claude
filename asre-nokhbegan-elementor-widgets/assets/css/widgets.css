@@ -131,6 +131,21 @@
 	font-size: 13px;
 }
 
+/* ---------- ابزارک: درصد تخفیف (ووکامرس) ---------- */
+.anw-disc {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	line-height: 1;
+	transition: all 0.3s ease;
+}
+
+.anw-disc-prefix,
+.anw-disc-value,
+.anw-disc-suffix {
+	display: inline-block;
+}
+
 /* ---------- ابزارک: لیست عنوان‌ها ---------- */
 .anw-list {
 	display: flex;
