@@ -3,7 +3,7 @@
  * Plugin Name: Asre Nokhbegan – Elementor Widgets
  * Plugin URI:  https://asrenokhbegan.com
  * Description: ابزارک‌های اختصاصی المنتور برای وب‌سایت عصر نخبگان.
- * Version:     1.7.0
+ * Version:     1.8.0
  * Author:      imiladco
  * Author URI:  https://asrenokhbegan.com
  * Text Domain: asre-nokhbegan-widgets
@@ -18,7 +18,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit; // جلوگیری از دسترسی مستقیم.
 }
 
-define( 'ANW_VERSION', '1.7.0' );
+define( 'ANW_VERSION', '1.8.0' );
 define( 'ANW_MINIMUM_ELEMENTOR_VERSION', '3.25.0' );
 define( 'ANW_MINIMUM_PHP_VERSION', '7.4' );
 define( 'ANW_FILE', __FILE__ );
@@ -76,6 +76,25 @@ function anw_init() {
 	add_action( 'elementor/elements/categories_registered', 'anw_add_category' );
 	add_action( 'elementor/widgets/register', 'anw_register_widgets' );
 	add_action( 'elementor/frontend/after_register_styles', 'anw_register_assets' );
+
+	// بروزرسانی زندهٔ شمارشگر سبد خرید هنگام افزودن محصول (بدون رفرش صفحه).
+	if ( class_exists( 'WooCommerce' ) ) {
+		add_filter( 'woocommerce_add_to_cart_fragments', 'anw_cart_count_fragments' );
+	}
+}
+
+/**
+ * تزریق شمارشگر بروزشدهٔ سبد به fragmentهای ووکامرس.
+ *
+ * @param array $fragments قطعات HTML برای جایگزینی سمت کلاینت.
+ * @return array
+ */
+function anw_cart_count_fragments( $fragments ) {
+	$count = ( function_exists( 'WC' ) && WC()->cart ) ? WC()->cart->get_cart_contents_count() : 0;
+
+	$fragments['span.anw-cart-count'] = anw_cart_count_badge_html( $count );
+
+	return $fragments;
 }
 add_action( 'plugins_loaded', 'anw_init' );
 
@@ -134,9 +153,11 @@ function anw_register_widgets( $widgets_manager ) {
 	if ( class_exists( 'WooCommerce' ) ) {
 		require_once ANW_PATH . 'widgets/class-product-price-widget.php';
 		require_once ANW_PATH . 'widgets/class-discount-badge-widget.php';
+		require_once ANW_PATH . 'widgets/class-cart-button-widget.php';
 
 		$widgets_manager->register( new \ANW_Product_Price_Widget() );
 		$widgets_manager->register( new \ANW_Discount_Badge_Widget() );
+		$widgets_manager->register( new \ANW_Cart_Button_Widget() );
 	}
 }
 

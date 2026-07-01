@@ -146,6 +146,47 @@
 	display: inline-block;
 }
 
+/* ---------- ابزارک: دکمهٔ سبد خرید (ووکامرس) ---------- */
+.anw-cart {
+	position: relative;
+	display: inline-flex;
+	flex-direction: row;
+	align-items: center;
+	justify-content: center;
+	gap: 8px;
+	text-decoration: none;
+	transition: all 0.3s ease;
+}
+
+.anw-cart-icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	flex-shrink: 0;
+	transition: all 0.3s ease;
+}
+
+.anw-cart-icon img,
+.anw-cart-icon svg {
+	display: block;
+	width: 32px;
+	height: auto;
+}
+
+.anw-cart-text {
+	transition: color 0.3s ease;
+}
+
+.anw-cart-count {
+	position: absolute;
+	z-index: 2;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	line-height: 1;
+	transition: all 0.3s ease;
+}
+
 /* ---------- ابزارک: لیست عنوان‌ها ---------- */
 .anw-list {
 	display: flex;

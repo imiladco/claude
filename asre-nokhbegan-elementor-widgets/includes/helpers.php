@@ -54,6 +54,25 @@ if ( ! function_exists( 'anw_allowed_inline_html' ) ) {
 	}
 }
 
+if ( ! function_exists( 'anw_cart_count_badge_html' ) ) {
+	/**
+	 * markup نشان شمارشگر سبد خرید. عمداً ساده و مستقل از تنظیمات ویجت است تا
+	 * هم در رندر اولیه و هم در fragmentهای AJAX ووکامرس (بروزرسانی زندهٔ عدد) یکسان باشد.
+	 *
+	 * @param int $count تعداد اقلام سبد.
+	 * @return string
+	 */
+	function anw_cart_count_badge_html( $count ) {
+		$count   = (int) $count;
+		$classes = 'anw-cart-count';
+		if ( $count <= 0 ) {
+			$classes .= ' anw-cart-count--empty';
+		}
+
+		return '<span class="' . esc_attr( $classes ) . '">' . esc_html( (string) $count ) . '</span>';
+	}
+}
+
 if ( ! function_exists( 'anw_get_media_icon_html' ) ) {
 	/**
 	 * رندر آیکون از کنترل MEDIA؛ SVG به‌صورت اینلاین (پاک‌سازی‌شده) و سایر
