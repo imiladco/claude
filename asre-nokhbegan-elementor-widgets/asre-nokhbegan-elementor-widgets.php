@@ -3,7 +3,7 @@
  * Plugin Name: Asre Nokhbegan – Elementor Widgets
  * Plugin URI:  https://asrenokhbegan.com
  * Description: ابزارک‌های اختصاصی المنتور برای وب‌سایت عصر نخبگان.
- * Version:     1.8.0
+ * Version:     1.9.0
  * Author:      imiladco
  * Author URI:  https://asrenokhbegan.com
  * Text Domain: asre-nokhbegan-widgets
@@ -18,7 +18,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit; // جلوگیری از دسترسی مستقیم.
 }
 
-define( 'ANW_VERSION', '1.8.0' );
+define( 'ANW_VERSION', '1.9.0' );
 define( 'ANW_MINIMUM_ELEMENTOR_VERSION', '3.25.0' );
 define( 'ANW_MINIMUM_PHP_VERSION', '7.4' );
 define( 'ANW_FILE', __FILE__ );
@@ -34,6 +34,19 @@ if ( ! defined( 'ANW_GITHUB_REPO' ) ) {
 }
 // برای مخزن خصوصی، یک توکن دسترسی در wp-config.php تعریف کنید:
 // define( 'ANW_GITHUB_TOKEN', 'xxxx' );
+
+/**
+ * اعلام سازگاری با HPOS (High-Performance Order Storage) — استاندارد افزونه‌های
+ * ووکامرسیِ جدید، حتی وقتی افزونه مستقیم با سفارش‌ها کار ندارد.
+ */
+add_action(
+	'before_woocommerce_init',
+	function () {
+		if ( class_exists( \Automattic\WooCommerce\Utilities\FeaturesUtil::class ) ) {
+			\Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility( 'custom_order_tables', ANW_FILE, true );
+		}
+	}
+);
 
 /**
  * راه‌اندازی بروزرسانی خودکار از گیت‌هاب (مستقل از المنتور، فقط در ادمین/کرون).
@@ -76,10 +89,22 @@ function anw_init() {
 	add_action( 'elementor/elements/categories_registered', 'anw_add_category' );
 	add_action( 'elementor/widgets/register', 'anw_register_widgets' );
 	add_action( 'elementor/frontend/after_register_styles', 'anw_register_assets' );
+	add_action( 'elementor/frontend/after_register_scripts', 'anw_register_scripts' );
 
-	// بروزرسانی زندهٔ شمارشگر سبد خرید هنگام افزودن محصول (بدون رفرش صفحه).
+	// امکانات ووکامرسی افزونه.
 	if ( class_exists( 'WooCommerce' ) ) {
+		// بروزرسانی زندهٔ شمارشگر سبد خرید هنگام افزودن محصول (بدون رفرش صفحه).
 		add_filter( 'woocommerce_add_to_cart_fragments', 'anw_cart_count_fragments' );
+
+		// فیلترِ کوئریِ صفحهٔ نتایج بر پایهٔ ویژگی‌ها (ابزارک جستجوی هوشمند).
+		require_once ANW_PATH . 'includes/class-product-search.php';
+		( new ANW_Product_Search() )->init_hooks();
+
+		// متاباکسِ انتخاب سریع ویژگی‌ها (فقط در پیشخوان).
+		if ( is_admin() ) {
+			require_once ANW_PATH . 'includes/class-attributes-metabox.php';
+			( new ANW_Attributes_Metabox() )->init_hooks();
+		}
 	}
 }
 
@@ -154,10 +179,12 @@ function anw_register_widgets( $widgets_manager ) {
 		require_once ANW_PATH . 'widgets/class-product-price-widget.php';
 		require_once ANW_PATH . 'widgets/class-discount-badge-widget.php';
 		require_once ANW_PATH . 'widgets/class-cart-button-widget.php';
+		require_once ANW_PATH . 'widgets/class-smart-search-widget.php';
 
 		$widgets_manager->register( new \ANW_Product_Price_Widget() );
 		$widgets_manager->register( new \ANW_Discount_Badge_Widget() );
 		$widgets_manager->register( new \ANW_Cart_Button_Widget() );
+		$widgets_manager->register( new \ANW_Smart_Search_Widget() );
 	}
 }
 
@@ -170,6 +197,19 @@ function anw_register_assets() {
 		plugins_url( 'assets/css/widgets.css', __FILE__ ),
 		[],
 		ANW_VERSION
+	);
+}
+
+/**
+ * ثبت اسکریپت‌های مشترک — به‌صورت مشروط (فقط وقتی ابزارک مربوطه در صفحه باشد).
+ */
+function anw_register_scripts() {
+	wp_register_script(
+		'anw-smart-search',
+		plugins_url( 'assets/js/smart-search.js', __FILE__ ),
+		[],
+		ANW_VERSION,
+		true
 	);
 }
 
