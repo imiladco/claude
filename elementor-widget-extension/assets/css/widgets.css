@@ -1,0 +1,59 @@
+/* استایل پایهٔ ویجت‌ها — جزئیات بصری از طریق کنترل‌های المنتور قابل تنظیم است. */
+
+/* ---------- ویجت: باکس عنوان آیکون‌دار ---------- */
+.ewe-ihb {
+	display: flex;
+	align-items: center;
+	gap: 16px;
+	text-decoration: none;
+}
+
+.ewe-ihb-icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	flex-shrink: 0;
+	transition: all 0.3s ease;
+}
+
+.ewe-ihb-icon img,
+.ewe-ihb-icon svg {
+	display: block;
+	width: 48px;
+	height: auto;
+}
+
+.ewe-ihb-content {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	min-width: 0;
+}
+
+.ewe-ihb-title-1,
+.ewe-ihb-title-2 {
+	margin: 0;
+	transition: color 0.3s ease;
+}
+
+/* ---------- ویجت: لیست عنوان‌ها ---------- */
+.ewe-list {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 12px;
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+
+.ewe-list-item {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	text-decoration: none;
+	transition: all 0.3s ease;
+}
+
+.ewe-list-item-title {
+	transition: color 0.3s ease;
+}

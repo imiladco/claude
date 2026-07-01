@@ -1,0 +1,27 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build plugin zip
+        run: |
+          mkdir -p dist
+          git archive --format=zip --prefix=asre-nokhbegan-elementor-widgets/ -o dist/asre-nokhbegan-elementor-widgets.zip HEAD
+
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/asre-nokhbegan-elementor-widgets.zip
+          generate_release_notes: true

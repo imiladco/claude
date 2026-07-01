@@ -1,0 +1,347 @@
+/* استایل پایهٔ ابزارک‌های عصر نخبگان — جزئیات از طریق کنترل‌های المنتور تنظیم می‌شود. */
+
+/* ---------- ابزارک: سرتیتر آیکون‌دار ---------- */
+.anw-ihb {
+	display: flex;
+	align-items: center;
+	gap: 16px;
+	width: 100%;
+	text-decoration: none;
+}
+
+.anw-ihb-icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	flex-shrink: 0;
+	transition: all 0.3s ease;
+}
+
+.anw-ihb-icon img,
+.anw-ihb-icon svg {
+	display: block;
+	width: 48px;
+	height: auto;
+}
+
+.anw-ihb-content {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	min-width: 0;
+}
+
+.anw-ihb-title-1,
+.anw-ihb-title-2 {
+	display: block;
+	margin: 0;
+	transition: color 0.3s ease;
+}
+
+.anw-ihb-titles-wrap {
+	display: flex;
+	flex-direction: column;
+}
+
+/* ---------- ابزارک: کارت آیکون و عنوان ---------- */
+.anw-it {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	gap: 12px;
+	text-decoration: none;
+}
+
+.anw-it-icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	flex-shrink: 0;
+	transition: all 0.3s ease;
+}
+
+.anw-it-icon img,
+.anw-it-icon svg {
+	display: block;
+	width: 48px;
+	height: auto;
+}
+
+.anw-it-title {
+	margin: 0;
+	transition: color 0.3s ease;
+}
+
+/* ---------- ابزارک: آیکون تکی ---------- */
+.anw-ico {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	text-decoration: none;
+	transition: all 0.3s ease;
+	max-width: 100%;
+}
+
+.anw-ico-icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	line-height: 0;
+}
+
+.anw-ico-icon img,
+.anw-ico-icon svg {
+	display: block;
+	width: 64px;
+	height: auto;
+	transition: all 0.3s ease;
+}
+
+/* ---------- ابزارک: قیمت محصول (ووکامرس) ---------- */
+.anw-pp {
+	display: flex;
+	flex-direction: row;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 8px;
+	width: 100%;
+}
+
+.anw-pp-price {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+}
+
+/* قیمت پیشین (پیش از تخفیف) به‌صورت پیش‌فرض کمی کم‌رنگ‌تر است. */
+.anw-pp-old {
+	opacity: 0.7;
+}
+
+.anw-pp-amount,
+.anw-pp-currency {
+	display: inline-block;
+}
+
+.anw-pp-notice {
+	padding: 8px 12px;
+	background: #fff3cd;
+	color: #664d03;
+	border-radius: 4px;
+	font-size: 13px;
+}
+
+/* ---------- ابزارک: درصد تخفیف (ووکامرس) ---------- */
+.anw-disc {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	line-height: 1;
+	transition: all 0.3s ease;
+}
+
+.anw-disc-prefix,
+.anw-disc-value,
+.anw-disc-suffix {
+	display: inline-block;
+}
+
+/* ---------- ابزارک: دکمهٔ سبد خرید (ووکامرس) ---------- */
+.anw-cart {
+	position: relative;
+	display: inline-flex;
+	flex-direction: row;
+	align-items: center;
+	justify-content: center;
+	gap: 8px;
+	text-decoration: none;
+	transition: all 0.3s ease;
+}
+
+.anw-cart-icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	flex-shrink: 0;
+	transition: all 0.3s ease;
+}
+
+.anw-cart-icon img,
+.anw-cart-icon svg {
+	display: block;
+	width: 32px;
+	height: auto;
+}
+
+.anw-cart-text {
+	transition: color 0.3s ease;
+}
+
+.anw-cart-count {
+	position: absolute;
+	z-index: 2;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	line-height: 1;
+	transition: all 0.3s ease;
+}
+
+/* ---------- ابزارک: لیست عنوان‌ها ---------- */
+.anw-list {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 12px;
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+
+.anw-list-li {
+	display: inline-flex;
+	margin: 0;
+	padding: 0;
+}
+
+.anw-list-item {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	text-decoration: none;
+	transition: all 0.3s ease;
+}
+
+.anw-list-item-title {
+	transition: color 0.3s ease;
+}
+
+/* ---------- ابزارک: جستجوی هوشمند محصولات (ووکامرس) ---------- */
+.anw-ss {
+	display: flex;
+	flex-wrap: nowrap;
+	align-items: flex-end;
+	gap: 16px;
+	width: 100%;
+}
+
+.anw-ss-fields {
+	display: flex;
+	flex-direction: row;
+	flex-wrap: nowrap;
+	align-items: flex-end;
+	gap: 16px;
+	flex: 1 1 auto;
+	min-width: 0;
+}
+
+.anw-ss-field {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	flex: 1 1 180px;
+	min-width: 0;
+}
+
+.anw-ss-label {
+	display: block;
+}
+
+.anw-ss-select {
+	width: 100%;
+	box-sizing: border-box;
+	min-height: 48px;
+	padding: 10px 18px 10px 42px;
+	border: 1px solid transparent;
+	border-radius: 12px;
+	background-color: #f3f4f6;
+	color: #4b5563;
+	cursor: pointer;
+	-webkit-appearance: none;
+	-moz-appearance: none;
+	appearance: none;
+	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+	background-repeat: no-repeat;
+	background-position: left 16px center;
+	background-size: 16px 16px;
+	transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease, color 0.2s ease;
+}
+
+.anw-ss-select::-ms-expand {
+	display: none;
+}
+
+.anw-ss-divider {
+	align-self: stretch;
+	flex: 0 0 auto;
+	border-inline-start: 1px solid #e5e7eb;
+}
+
+.anw-ss-error {
+	color: #dc2626;
+	font-size: 0.85em;
+}
+
+.anw-ss-field--invalid .anw-ss-select {
+	border-color: #dc2626;
+}
+
+.anw-ss-button {
+	display: inline-flex;
+	flex-direction: row;
+	align-items: center;
+	justify-content: center;
+	gap: 8px;
+	cursor: pointer;
+	border: none;
+	background-color: #7cc243;
+	color: #fff;
+	min-height: 48px;
+	padding: 10px 28px;
+	border-radius: 12px;
+	flex: 0 0 auto;
+	white-space: nowrap;
+	transition: all 0.25s ease;
+}
+
+.anw-ss-button-icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	line-height: 0;
+}
+
+.anw-ss-button-icon svg {
+	width: 1em;
+	height: 1em;
+	fill: currentColor;
+}
+
+/* پنهان‌سازی بصریِ برچسب با حفظ دسترس‌پذیری برای صفحه‌خوان‌ها. */
+.anw-ss-sr-only {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	padding: 0;
+	margin: -1px;
+	overflow: hidden;
+	clip: rect(0, 0, 0, 0);
+	white-space: nowrap;
+	border: 0;
+}
+
+/* در موبایل: فیلدها ستونی و جداکننده‌ها پنهان. */
+@media ( max-width: 767px ) {
+	.anw-ss {
+		flex-wrap: wrap;
+	}
+
+	.anw-ss-fields {
+		flex-direction: column;
+		flex-wrap: wrap;
+		align-items: stretch;
+	}
+
+	.anw-ss-divider {
+		display: none;
+	}
+}
