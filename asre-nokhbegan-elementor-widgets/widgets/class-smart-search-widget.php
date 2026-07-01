@@ -243,7 +243,7 @@ class ANW_Smart_Search_Widget extends \Elementor\Widget_Base {
 			[
 				'label'                => esc_html__( 'جای آیکون', 'asre-nokhbegan-widgets' ),
 				'type'                 => Controls_Manager::CHOOSE,
-				'default'              => 'row',
+				'default'              => 'row-reverse',
 				'options'              => [
 					'row'         => [
 						'title' => esc_html__( 'ابتدا', 'asre-nokhbegan-widgets' ),
@@ -259,6 +259,32 @@ class ANW_Smart_Search_Widget extends \Elementor\Widget_Base {
 					'row-reverse' => 'flex-direction: row-reverse;',
 				],
 				'condition'            => [ 'button_show_text' => 'yes' ],
+				'selectors'            => [
+					'{{WRAPPER}} .anw-ss-button' => '{{VALUE}}',
+				],
+			]
+		);
+
+		$this->add_control(
+			'button_position',
+			[
+				'label'                => esc_html__( 'جای دکمه', 'asre-nokhbegan-widgets' ),
+				'type'                 => Controls_Manager::CHOOSE,
+				'default'              => 'start',
+				'options'              => [
+					'start' => [
+						'title' => esc_html__( 'ابتدا (سمت شروع)', 'asre-nokhbegan-widgets' ),
+						'icon'  => 'eicon-h-align-right',
+					],
+					'end'   => [
+						'title' => esc_html__( 'انتها', 'asre-nokhbegan-widgets' ),
+						'icon'  => 'eicon-h-align-left',
+					],
+				],
+				'selectors_dictionary' => [
+					'start' => 'order: -1;',
+					'end'   => 'order: 2;',
+				],
 				'selectors'            => [
 					'{{WRAPPER}} .anw-ss-button' => '{{VALUE}}',
 				],
@@ -582,8 +608,8 @@ class ANW_Smart_Search_Widget extends \Elementor\Widget_Base {
 				'label'        => esc_html__( 'نمایش برچسب‌ها', 'asre-nokhbegan-widgets' ),
 				'type'         => Controls_Manager::SWITCHER,
 				'return_value' => 'yes',
-				'default'      => 'yes',
-				'description'  => esc_html__( 'در صورت خاموش‌بودن، برچسب‌ها به‌صورت بصری پنهان می‌شوند ولی برای صفحه‌خوان‌ها باقی می‌مانند.', 'asre-nokhbegan-widgets' ),
+				'default'      => '',
+				'description'  => esc_html__( 'در صورت خاموش‌بودن، برچسب‌ها به‌صورت بصری پنهان می‌شوند ولی برای صفحه‌خوان‌ها باقی می‌مانند (متن Placeholder داخل فیلد نمایش داده می‌شود).', 'asre-nokhbegan-widgets' ),
 			]
 		);
 
